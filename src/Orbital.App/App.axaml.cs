@@ -8,7 +8,9 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Orbital.App.Services;
+using Orbital.App.Views;
 using Orbital.Core.Persistence;
+using Orbital.Core.ViewModels;
 
 public partial class App : Application, IDisposable
 {
@@ -17,6 +19,8 @@ public partial class App : Application, IDisposable
     private SharpHookGlobalHotkeyService? hotkeys;
     private QuickAddController? quickAdd;
     private OverlayController? overlay;
+    private IDisposable? quickAddHotkeyReg;
+    private IDisposable? overlayHotkeyReg;
 
     public AppHost? Host => host;
 
@@ -60,12 +64,13 @@ public partial class App : Application, IDisposable
             Debug.WriteLine($"Failed to start global hotkey hook: {ex}");
         }
 
-        hotkeys.Register(host.Settings.QuickAddHotkey, () => quickAdd.Toggle());
-        hotkeys.Register(host.Settings.ToggleOverlayHotkey, () => overlay.Toggle());
+        RegisterHotkeys();
+        host.SettingsChanged += RegisterHotkeys;
 
         tray = new TrayIconController();
         tray.QuickAddRequested += quickAdd.Toggle;
         tray.ToggleOverlayRequested += overlay.Toggle;
+        tray.SettingsRequested += ShowSettings;
         tray.QuitRequested += async () =>
         {
             await host!.FlushAsync();
@@ -76,6 +81,31 @@ public partial class App : Application, IDisposable
         };
         tray.OpenDataFolderRequested += OpenDataFolder;
         tray.Show();
+
+        overlay!.SettingsRequested += ShowSettings;
+    }
+
+    private void RegisterHotkeys()
+    {
+        quickAddHotkeyReg?.Dispose();
+        overlayHotkeyReg?.Dispose();
+        quickAddHotkeyReg = hotkeys!.Register(host!.Settings.QuickAddHotkey, () => quickAdd!.Toggle());
+        overlayHotkeyReg  = hotkeys.Register(host.Settings.ToggleOverlayHotkey, () => overlay!.Toggle());
+    }
+
+    private void ShowSettings()
+    {
+        if (host is null) return;
+        var vm = new SettingsViewModel(host.Settings);
+        var w = new SettingsWindow { DataContext = vm };
+        w.SaveRequested += async () =>
+        {
+            host.Settings = vm.Build();
+            await host.SaveSettingsAsync();
+            w.Close();
+        };
+        w.CancelRequested += () => w.Close();
+        w.Show();
     }
 
     private static void OpenDataFolder()

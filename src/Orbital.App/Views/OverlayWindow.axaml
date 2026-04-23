@@ -47,23 +47,31 @@
                             <CheckBox Grid.Column="0"
                                       IsChecked="{Binding IsCompleted, Mode=TwoWay}"
                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding Title}"
-                                       Foreground="White"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis">
-                                <TextBlock.Styles>
-                                    <Style Selector="TextBlock[Tag='true']">
-                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                        <Setter Property="Foreground" Value="#80FFFFFF" />
-                                    </Style>
-                                </TextBlock.Styles>
-                            </TextBlock>
-                            <Border Grid.Column="2" Padding="6,2" CornerRadius="4"
-                                    Background="#22FFFFFF" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding DueLabel}"
-                                           FontSize="11" Foreground="#D0FFFFFF" />
-                            </Border>
+
+                            <Grid Grid.Column="1">
+                                <TextBlock Text="{Binding Title}"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           IsVisible="{Binding !IsEditingTitle}" />
+                                <TextBox Text="{Binding Title, Mode=TwoWay}"
+                                         BorderThickness="0" Background="#22000000"
+                                         IsVisible="{Binding IsEditingTitle}"
+                                         Padding="2" />
+                            </Grid>
+
+                            <Grid Grid.Column="2">
+                                <Border Padding="6,2" CornerRadius="4"
+                                        Background="#22FFFFFF"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding !IsEditingDue}">
+                                    <TextBlock Text="{Binding DueLabel}"
+                                               FontSize="11" Foreground="#D0FFFFFF" />
+                                </Border>
+                                <TextBox Text="{Binding DueEditBuffer, Mode=TwoWay}"
+                                         Width="90" BorderThickness="0" Background="#22000000"
+                                         IsVisible="{Binding IsEditingDue}" Padding="2" />
+                            </Grid>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

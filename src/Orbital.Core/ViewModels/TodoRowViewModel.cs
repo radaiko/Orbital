@@ -3,16 +3,19 @@ namespace Orbital.Core.ViewModels;
 
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Orbital.Core.DateParsing;
 using Orbital.Core.Models;
 
 public sealed partial class TodoRowViewModel : ObservableObject
 {
     private readonly Func<DateOnly> today;
+    private readonly DueDateParser parser;
 
-    public TodoRowViewModel(Todo model, Func<DateOnly>? todayProvider = null)
+    public TodoRowViewModel(Todo model, DueDateParser? parser = null, Func<DateOnly>? todayProvider = null)
     {
         Model = model;
         today = todayProvider ?? (() => DateOnly.FromDateTime(DateTime.Today));
+        this.parser = parser ?? new DueDateParser(today);
     }
 
     public Todo Model { get; }
@@ -72,4 +75,46 @@ public sealed partial class TodoRowViewModel : ObservableObject
 
     public bool IsOverdue => DueDate is { } d && !IsCompleted && d < today();
     public bool IsDueToday => DueDate is { } d && d == today();
+
+    // --- Inline editing ---
+
+    [ObservableProperty]
+    private bool isEditingTitle;
+
+    [ObservableProperty]
+    private bool isEditingDue;
+
+    [ObservableProperty]
+    private string dueEditBuffer = string.Empty;
+
+    public void BeginEditTitle() => IsEditingTitle = true;
+
+    public void CommitTitle(string newTitle)
+    {
+        Title = newTitle.Trim();
+        IsEditingTitle = false;
+    }
+
+    public void CancelEditTitle()
+    {
+        IsEditingTitle = false;
+        OnPropertyChanged(nameof(Title));
+    }
+
+    public void BeginEditDue()
+    {
+        DueEditBuffer = DueDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        IsEditingDue = true;
+    }
+
+    public bool TryCommitDue()
+    {
+        var r = parser.Parse(DueEditBuffer);
+        if (r.IsError) return false;
+        DueDate = r.Date;
+        IsEditingDue = false;
+        return true;
+    }
+
+    public void CancelEditDue() => IsEditingDue = false;
 }

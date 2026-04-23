@@ -219,8 +219,8 @@
       <div class="dl-card" data-os="win">
         <div class="os-icon">🪟</div>
         <div class="os-name">Windows</div>
-        <div class="os-detail">x64 · portable</div>
-        <a class="dl-btn unavailable" href="#" data-asset="Orbital-win-x64">Download</a>
+        <div class="os-detail">x64 · installer with auto-updates</div>
+        <a class="dl-btn unavailable" href="#" data-asset="win-Setup.exe">Download</a>
       </div>
       <div class="dl-card" data-os="linux">
         <div class="os-icon">🐧</div>
@@ -290,19 +290,23 @@
       const version = tag.replace(/^v/, "");
       versionEl.textContent = `v${version}`;
 
-      // Map asset-prefix → href
-      const byPrefix = {};
+      // Map asset-key → href. Prefer installer formats that give auto-updates:
+      //   macOS → notarized .app zip (drag-to-Applications works fine; Velopack
+      //           tracks updates via the pkg that ships alongside)
+      //   Win   → Velopack Setup.exe (installs + registers for updates)
+      const byKey = {};
       (data.assets || []).forEach(a => {
-        const url = a.browser_download_url;
+        const url  = a.browser_download_url;
+        const name = a.name || "";
         if (!url) return;
-        if (url.includes("Orbital-osx-arm64-") && url.endsWith(".zip")) byPrefix["Orbital-osx-arm64"] = url;
-        if (url.includes("Orbital-win-x64-")   && url.endsWith(".zip")) byPrefix["Orbital-win-x64"]   = url;
+        if (name.startsWith("Orbital-osx-arm64-") && name.endsWith(".zip")) byKey["Orbital-osx-arm64"] = url;
+        if (name.endsWith("win-Setup.exe"))                                 byKey["win-Setup.exe"]     = url;
       });
 
       // Card buttons
       document.querySelectorAll(".dl-card .dl-btn[data-asset]").forEach(btn => {
-        const prefix = btn.getAttribute("data-asset");
-        const href = byPrefix[prefix];
+        const key = btn.getAttribute("data-asset");
+        const href = byKey[key];
         if (href) {
           btn.href = href;
           btn.classList.remove("unavailable");
@@ -311,8 +315,8 @@
       });
 
       // Primary CTA → OS's download (if available)
-      const ctaKey = isMac ? "Orbital-osx-arm64" : isWin ? "Orbital-win-x64" : null;
-      if (ctaKey && byPrefix[ctaKey]) cta.href = byPrefix[ctaKey];
+      const ctaKey = isMac ? "Orbital-osx-arm64" : isWin ? "win-Setup.exe" : null;
+      if (ctaKey && byKey[ctaKey]) cta.href = byKey[ctaKey];
     })
     .catch(() => {
       // Pre-first-release: fall back to the releases index

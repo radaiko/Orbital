@@ -101,7 +101,9 @@ dotnet publish "$ROOT/src/Orbital.App/Orbital.App.csproj" \
 
 WIN_ZIP="$WIN_OUT/Orbital-win-x64-$VERSION.zip"
 rm -f "$WIN_ZIP"
-(cd "$WIN_OUT" && zip -r "$(basename "$WIN_ZIP")" payload > /dev/null)
+# Flatten: zip the contents of payload/ (so Orbital.App.exe sits at the root of
+# the archive) rather than the directory itself.
+(cd "$WIN_OUT/payload" && zip -r "$WIN_ZIP" . > /dev/null)
 
 echo "▸ Windows artifact: $WIN_ZIP"
 

@@ -86,3 +86,20 @@ done
 
 echo "▸ macOS artifacts:"
 printf '  %s\n' "${MAC_ARTIFACTS[@]}"
+
+# --- Windows cross-compile ---
+echo "▸ Building Windows x64"
+WIN_OUT="$PUBLISH/win-x64"
+rm -rf "$WIN_OUT"
+
+dotnet publish "$ROOT/src/Orbital.App/Orbital.App.csproj" \
+    -c Release -r win-x64 --self-contained true \
+    -p:PublishSingleFile=true \
+    -p:IncludeNativeLibrariesForSelfExtract=true \
+    -o "$WIN_OUT/payload" --nologo --verbosity minimal
+
+WIN_ZIP="$WIN_OUT/Orbital-win-x64-$VERSION.zip"
+rm -f "$WIN_ZIP"
+(cd "$WIN_OUT" && zip -r "$(basename "$WIN_ZIP")" payload > /dev/null)
+
+echo "▸ Windows artifact: $WIN_ZIP"

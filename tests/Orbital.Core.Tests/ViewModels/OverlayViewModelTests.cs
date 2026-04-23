@@ -90,4 +90,28 @@ public sealed class OverlayViewModelTests
         todos.Should().ContainSingle(t => t.Title == "a");
         vm.Rows.Should().ContainSingle();
     }
+
+    [Fact]
+    public void Mutations_raise_TodosMutated_so_controller_can_save()
+    {
+        var todos = new ObservableCollection<Todo>
+        {
+            T(0, "a"), T(1, "b"),
+        };
+        var vm = Make(todos);
+        int count = 0;
+        vm.TodosMutated += () => count++;
+
+        vm.ToggleComplete(vm.Rows[0]);
+        count.Should().Be(1, "ToggleComplete should fire TodosMutated");
+
+        vm.Delete(vm.Rows[0]);
+        count.Should().Be(2, "Delete should fire TodosMutated");
+
+        vm.Undo();
+        count.Should().Be(3, "Undo should fire TodosMutated");
+
+        vm.Snooze(vm.Rows[0]);
+        count.Should().Be(4, "Snooze should fire TodosMutated");
+    }
 }

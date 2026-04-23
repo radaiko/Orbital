@@ -31,6 +31,15 @@ public sealed partial class OverlayWindow : Window
         list.AddHandler(PointerPressedEvent, OnListPointerPressed, RoutingStrategies.Tunnel);
         list.AddHandler(PointerMovedEvent, OnListPointerMoved, RoutingStrategies.Tunnel);
         list.AddHandler(PointerReleasedEvent, OnListPointerReleased, RoutingStrategies.Tunnel);
+        // If the pointer is released off the window (e.g. user alt-tabs mid-drag),
+        // reset the drag state so the next press doesn't resurrect a stale from-index.
+        list.AddHandler(PointerCaptureLostEvent, (_, _) => ResetDragState(), RoutingStrategies.Bubble);
+    }
+
+    private void ResetDragState()
+    {
+        isDragging = false;
+        dragFromIndex = -1;
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -43,7 +52,14 @@ public sealed partial class OverlayWindow : Window
         {
             case Key.Escape:
                 e.Handled = true;
-                CloseRequested?.Invoke();
+                // If a row is being edited, Esc cancels the edit and stays open.
+                // Otherwise Esc hides the overlay.
+                if (list?.SelectedItem is TodoRowViewModel rEsc && rEsc.IsEditingTitle)
+                    rEsc.CancelEditTitle();
+                else if (list?.SelectedItem is TodoRowViewModel rEscDue && rEscDue.IsEditingDue)
+                    rEscDue.CancelEditDue();
+                else
+                    CloseRequested?.Invoke();
                 break;
             case Key.Space:
                 if (list?.SelectedItem is TodoRowViewModel r1) { vm.ToggleComplete(r1); e.Handled = true; }
@@ -109,8 +125,7 @@ public sealed partial class OverlayWindow : Window
         }
         finally
         {
-            isDragging = false;
-            dragFromIndex = -1;
+            ResetDragState();
         }
     }
 }

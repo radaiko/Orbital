@@ -87,7 +87,14 @@ public sealed partial class TodoRowViewModel : ObservableObject
     [ObservableProperty]
     private string dueEditBuffer = string.Empty;
 
-    public void BeginEditTitle() => IsEditingTitle = true;
+    private string titleSnapshot = string.Empty;
+
+    public void BeginEditTitle()
+    {
+        // Snapshot so Cancel can revert the TwoWay-bound TextBox mutations.
+        titleSnapshot = Model.Title;
+        IsEditingTitle = true;
+    }
 
     public void CommitTitle(string newTitle)
     {
@@ -97,8 +104,8 @@ public sealed partial class TodoRowViewModel : ObservableObject
 
     public void CancelEditTitle()
     {
+        Title = titleSnapshot;
         IsEditingTitle = false;
-        OnPropertyChanged(nameof(Title));
     }
 
     public void BeginEditDue()

@@ -87,4 +87,24 @@ public sealed class TodoRowViewModelTests
         vm.TryCommitDue().Should().BeFalse();
         vm.IsEditingDue.Should().BeTrue();
     }
+
+    [Fact]
+    public void CancelEditTitle_reverts_intermediate_TwoWay_mutations()
+    {
+        // The title TextBox in the overlay XAML is TwoWay-bound, so every
+        // keystroke updates Model.Title. Cancel must restore the pre-edit value.
+        var todo = new Todo
+        {
+            Id = Guid.NewGuid(),
+            Title = "Buy milk",
+            CreatedAt = DateTimeOffset.UtcNow,
+            Order = 0,
+        };
+        var vm = new TodoRowViewModel(todo);
+        vm.BeginEditTitle();
+        vm.Title = "Buy milkzzzz"; // simulate keystrokes via TwoWay binding
+        vm.CancelEditTitle();
+        vm.Title.Should().Be("Buy milk");
+        vm.IsEditingTitle.Should().BeFalse();
+    }
 }

@@ -107,24 +107,21 @@ Inter, bundled via Avalonia's `.WithInterFont()` (already configured in `Program
 
 `src/Orbital.App/Icons.axaml` (new merged dictionary loaded by `App.axaml`):
 
+The dictionary defines one `StreamGeometry` per icon key below. The `d`-attribute content is pulled verbatim from each corresponding file in the Lucide repository (e.g. `lucide/icons/settings.svg`). Example for two of the simpler icons that can be written in full:
+
 ```xml
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StreamGeometry x:Key="Icon.Settings">M12 15a3 3 0 100-6 3 3 0 000 6z…</StreamGeometry>
     <StreamGeometry x:Key="Icon.Close">M18 6L6 18M6 6l12 12</StreamGeometry>
     <StreamGeometry x:Key="Icon.Check">M20 6L9 17l-5-5</StreamGeometry>
-    <StreamGeometry x:Key="Icon.ArrowUp">M12 19V5M5 12l7-7 7 7</StreamGeometry>
-    <StreamGeometry x:Key="Icon.AlertTriangle">M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01</StreamGeometry>
-    <StreamGeometry x:Key="Icon.Calendar">M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18</StreamGeometry>
-    <StreamGeometry x:Key="Icon.GripVertical">M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01</StreamGeometry>
-    <StreamGeometry x:Key="Icon.ChevronDown">M6 9l6 6 6-6</StreamGeometry>
-    <StreamGeometry x:Key="Icon.Trash">M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6</StreamGeometry>
-    <StreamGeometry x:Key="Icon.ExternalLink">M15 3h6v6M10 14L21 3M21 14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7</StreamGeometry>
-    <StreamGeometry x:Key="Icon.ArrowRight">M5 12h14M12 5l7 7-7 7</StreamGeometry>
+    <!-- Icon.Settings, Icon.ArrowUp, Icon.AlertTriangle, Icon.Calendar,
+         Icon.GripVertical, Icon.ChevronDown, Icon.Trash, Icon.ExternalLink,
+         Icon.ArrowRight — d-attribute copied from the corresponding
+         file in lucide/icons/*.svg at implementation time. -->
 </ResourceDictionary>
 ```
 
-The exact `d` data for each icon will be pulled verbatim from Lucide at implementation time. Each geometry is a single stroked path with stroke-width 2, stroke-linecap round, stroke-linejoin round (the Lucide defaults).
+Each geometry is a single stroked path with stroke-width 2, stroke-linecap round, stroke-linejoin round (Lucide's defaults). ViewBox is `0 0 24 24` for all Lucide icons; we set `Stretch="Uniform"` on the `Path` so the 24-unit space scales to whatever `Width`/`Height` the consumer specifies.
 
 ### Rendering
 

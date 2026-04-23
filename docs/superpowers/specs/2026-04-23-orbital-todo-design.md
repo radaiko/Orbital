@@ -129,7 +129,7 @@ public sealed record HotkeyBinding(KeyModifiers Modifiers, Key Key);
 public enum OverlayPosition { TopRight, TopLeft, BottomRight, BottomLeft }
 ```
 
-`KeyModifiers.Control` is the logical "primary" modifier — rendered as `⌃⌥` on macOS and `Ctrl+Alt` on Windows. The hotkey service translates to the native modifier when registering.
+The default uses `Ctrl+Alt` literally on both platforms — on macOS that's Control+Option (`⌃⌥`), not Command. This avoids the usual cross-platform modifier translation tangle: the same modifier constants and key codes work identically everywhere, and SharpHook's raw key events match what users type. Users who prefer Cmd-based combos on macOS can rebind in Settings.
 
 ## 6. Storage
 
@@ -263,7 +263,7 @@ Off by default. User opts in from tray menu or settings.
 - Re-invoking the hotkey while visible: focus + select title, don't reset typed content.
 - Empty title + Enter: no-op (silent).
 
-New todos prepend (top of list), `Order = min(existing) - 1`.
+New todos prepend (top of list), `Order = min(existing) - 1`, or `0` if the list is empty.
 
 ## 10. Overlay window
 

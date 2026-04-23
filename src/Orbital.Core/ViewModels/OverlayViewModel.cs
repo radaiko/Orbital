@@ -4,12 +4,15 @@ namespace Orbital.Core.ViewModels;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Orbital.Core.DateParsing;
 using Orbital.Core.Models;
 
 public sealed partial class OverlayViewModel : ObservableObject
 {
     private readonly ObservableCollection<Todo> source;
     private readonly Func<DateOnly> today;
+    private readonly DueDateParser parser;
+    private readonly Dictionary<Guid, TodoRowViewModel> rowsById = new();
     private Action? lastUndo;
 
     public ObservableCollection<TodoRowViewModel> Rows { get; } = new();
@@ -17,10 +20,11 @@ public sealed partial class OverlayViewModel : ObservableObject
     [ObservableProperty]
     private bool showCompleted;
 
-    public OverlayViewModel(ObservableCollection<Todo> source, Func<DateOnly>? todayProvider = null)
+    public OverlayViewModel(ObservableCollection<Todo> source, Func<DateOnly>? todayProvider = null, DueDateParser? parser = null)
     {
         this.source = source;
         this.today = todayProvider ?? (() => DateOnly.FromDateTime(DateTime.Today));
+        this.parser = parser ?? new DueDateParser(this.today);
         source.CollectionChanged += OnSourceChanged;
         Rebuild();
     }
@@ -38,9 +42,23 @@ public sealed partial class OverlayViewModel : ObservableObject
             ? source.Where(t => t.IsCompleted).OrderByDescending(t => t.CompletedAt)
             : Enumerable.Empty<Todo>();
 
+        var desired = active.Concat(completed).ToList();
+
+        // Drop rows for todos that are no longer in the desired set.
+        var desiredIds = desired.Select(t => t.Id).ToHashSet();
+        foreach (var id in rowsById.Keys.Where(k => !desiredIds.Contains(k)).ToList())
+            rowsById.Remove(id);
+
         Rows.Clear();
-        foreach (var t in active.Concat(completed))
-            Rows.Add(new TodoRowViewModel(t, today));
+        foreach (var t in desired)
+        {
+            if (!rowsById.TryGetValue(t.Id, out var vm))
+            {
+                vm = new TodoRowViewModel(t, parser, today);
+                rowsById[t.Id] = vm;
+            }
+            Rows.Add(vm);
+        }
     }
 
     public void ToggleComplete(TodoRowViewModel row)
@@ -76,5 +94,16 @@ public sealed partial class OverlayViewModel : ObservableObject
         var action = lastUndo;
         lastUndo = null;
         action?.Invoke();
+    }
+
+    public void Reorder(int fromIndex, int toIndex)
+    {
+        if (fromIndex < 0 || toIndex < 0) return;
+        var active = source.Where(t => !t.IsCompleted).OrderBy(t => t.Order).ToList();
+        if (fromIndex >= active.Count || toIndex >= active.Count) return;
+        Orbital.Core.Ordering.TodoOrdering.ReorderActive(active, fromIndex, toIndex);
+        // active holds updated Order values; models are references so source items are updated.
+        TodosMutated?.Invoke();
+        Rebuild();
     }
 }

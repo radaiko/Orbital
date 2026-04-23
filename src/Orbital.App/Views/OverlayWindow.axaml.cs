@@ -2,15 +2,22 @@
 namespace Orbital.App.Views;
 
 using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
 using Orbital.Core.ViewModels;
 
 public sealed partial class OverlayWindow : Window
 {
     public event Action? CloseRequested;
     public event Action? SettingsRequested;
+
+    private bool isDragging;
+    private int dragFromIndex = -1;
+    private Point dragStart;
 
     public OverlayWindow()
     {
@@ -19,6 +26,11 @@ public sealed partial class OverlayWindow : Window
         Deactivated += (_, _) => CloseRequested?.Invoke();
         this.FindControl<Button>("CloseButton")!.Click += (_, _) => CloseRequested?.Invoke();
         this.FindControl<Button>("SettingsButton")!.Click += (_, _) => SettingsRequested?.Invoke();
+
+        var list = this.FindControl<ListBox>("RowList")!;
+        list.AddHandler(PointerPressedEvent, OnListPointerPressed, RoutingStrategies.Tunnel);
+        list.AddHandler(PointerMovedEvent, OnListPointerMoved, RoutingStrategies.Tunnel);
+        list.AddHandler(PointerReleasedEvent, OnListPointerReleased, RoutingStrategies.Tunnel);
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -46,6 +58,59 @@ public sealed partial class OverlayWindow : Window
             case Key.Z when e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta):
                 vm.Undo(); e.Handled = true;
                 break;
+            case Key.Enter:
+                if (list?.SelectedItem is TodoRowViewModel re)
+                {
+                    if (re.IsEditingTitle) { re.CommitTitle(re.Title); e.Handled = true; }
+                    else if (re.IsEditingDue) { re.TryCommitDue(); e.Handled = true; }
+                    else { re.BeginEditTitle(); e.Handled = true; }
+                }
+                break;
+            case Key.D when e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta):
+                if (list?.SelectedItem is TodoRowViewModel rd) { rd.BeginEditDue(); e.Handled = true; }
+                break;
+        }
+    }
+
+    private void OnListPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var list = (ListBox)sender!;
+        var item = (e.Source as Avalonia.Visual)?.FindAncestorOfType<ListBoxItem>();
+        if (item is null) return;
+        dragFromIndex = list.IndexFromContainer(item);
+        dragStart = e.GetPosition(list);
+    }
+
+    private void OnListPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (dragFromIndex < 0) return;
+        var list = (ListBox)sender!;
+        var pos = e.GetPosition(list);
+        if (!isDragging && Point.Distance(pos, dragStart) > 6)
+            isDragging = true;
+    }
+
+    private void OnListPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        try
+        {
+            if (!isDragging || dragFromIndex < 0) return;
+            var list = (ListBox)sender!;
+            var pos = e.GetPosition(list);
+            // Compute drop index as the ListBoxItem under the pointer, clamped to valid range.
+            var hit = list.GetVisualsAt(pos)
+                          .Select(v => v.FindAncestorOfType<ListBoxItem>())
+                          .FirstOrDefault(x => x is not null);
+            int toIndex = hit is not null ? list.IndexFromContainer(hit) : list.ItemCount - 1;
+            if (toIndex < 0) toIndex = 0;
+
+            if (DataContext is OverlayViewModel vm && toIndex != dragFromIndex)
+                vm.Reorder(dragFromIndex, toIndex);
+        }
+        finally
+        {
+            isDragging = false;
+            dragFromIndex = -1;
         }
     }
 }

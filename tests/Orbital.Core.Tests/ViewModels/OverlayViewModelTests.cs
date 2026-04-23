@@ -114,4 +114,51 @@ public sealed class OverlayViewModelTests
         vm.Snooze(vm.Rows[0]);
         count.Should().Be(4, "Snooze should fire TodosMutated");
     }
+
+    [Fact]
+    public void Reorder_changes_row_order()
+    {
+        var todos = new ObservableCollection<Todo>
+        {
+            T(0, "a"), T(1, "b"), T(2, "c"),
+        };
+        var vm = Make(todos);
+        vm.Reorder(0, 2);
+        vm.Rows.Select(r => r.Title).Should().Equal("b", "c", "a");
+    }
+
+    [Fact]
+    public void Reorder_updates_persisted_order_values_sequentially()
+    {
+        var todos = new ObservableCollection<Todo>
+        {
+            T(0, "a"), T(1, "b"), T(2, "c"),
+        };
+        var vm = Make(todos);
+        vm.Reorder(0, 2);
+        // After reorder: b=0, c=1, a=2 (TodoOrdering.ReorderActive reassigns sequential Orders)
+        vm.Rows[0].Model.Order.Should().Be(0);
+        vm.Rows[1].Model.Order.Should().Be(1);
+        vm.Rows[2].Model.Order.Should().Be(2);
+    }
+
+    [Fact]
+    public void Rebuild_preserves_row_vm_identity_when_other_row_mutates()
+    {
+        var todos = new ObservableCollection<Todo>
+        {
+            T(0, "a"), T(1, "b"),
+        };
+        var vm = Make(todos);
+
+        // Start editing the first row
+        vm.Rows[0].BeginEditTitle();
+        vm.Rows[0].IsEditingTitle.Should().BeTrue();
+
+        // Mutate a different row (toggle complete on row "b"), which triggers Rebuild
+        vm.ToggleComplete(vm.Rows[1]);
+
+        // Row "a" should still be in editing state
+        vm.Rows[0].IsEditingTitle.Should().BeTrue("Rebuild must preserve row VM identity");
+    }
 }

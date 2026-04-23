@@ -5,39 +5,67 @@
         x:Class="Orbital.App.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Orbital — Settings"
-        Width="480" Height="380"
-        CanResize="False">
-    <StackPanel Margin="24" Spacing="12">
-        <TextBlock Text="Hotkeys" FontSize="14" FontWeight="SemiBold" />
-        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto" RowSpacing="8">
-            <TextBlock Text="Quick add"  Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding QuickAddHotkey, Mode=TwoWay}" Grid.Row="0" Grid.Column="1"/>
-            <TextBlock Text="Show overlay" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding ToggleOverlayHotkey, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"/>
-        </Grid>
+        Width="480" Height="420"
+        CanResize="False"
+        Background="{DynamicResource OrbitalOverlayBackgroundBrush}">
+    <StackPanel Margin="28" Spacing="20">
 
-        <TextBlock Text="Overlay" FontSize="14" FontWeight="SemiBold" Margin="0,12,0,0" />
-        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-            <TextBlock Text="Position" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-            <ComboBox Grid.Row="0" Grid.Column="1"
-                      SelectedItem="{Binding OverlayPosition, Mode=TwoWay}">
-                <m:OverlayPosition>TopRight</m:OverlayPosition>
-                <m:OverlayPosition>TopLeft</m:OverlayPosition>
-                <m:OverlayPosition>BottomRight</m:OverlayPosition>
-                <m:OverlayPosition>BottomLeft</m:OverlayPosition>
-            </ComboBox>
-            <CheckBox Grid.Row="1" Grid.Column="1" Content="Hide when focus moves away"
-                      IsChecked="{Binding OverlayAutoHideOnFocusLoss, Mode=TwoWay}"/>
-            <CheckBox Grid.Row="2" Grid.Column="1" Content="Show completed todos by default"
-                      IsChecked="{Binding ShowCompleted, Mode=TwoWay}"/>
-        </Grid>
+        <!-- Hotkeys section -->
+        <StackPanel Spacing="12">
+            <TextBlock Text="Hotkeys" FontSize="14" FontWeight="SemiBold"
+                       Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"/>
+            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto" RowSpacing="12">
+                <TextBlock Text="Quick add" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{DynamicResource OrbitalOverlayDimBrush}"/>
+                <TextBox Text="{Binding QuickAddHotkey, Mode=TwoWay}" Grid.Row="0" Grid.Column="1"/>
+                <TextBlock Text="Show overlay" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{DynamicResource OrbitalOverlayDimBrush}"/>
+                <TextBox Text="{Binding ToggleOverlayHotkey, Mode=TwoWay}" Grid.Row="1" Grid.Column="1"/>
+            </Grid>
+        </StackPanel>
 
-        <TextBlock Text="Startup" FontSize="14" FontWeight="SemiBold" Margin="0,12,0,0" />
-        <CheckBox Content="Start Orbital at login" IsChecked="{Binding StartAtLogin, Mode=TwoWay}" />
+        <!-- Overlay section -->
+        <StackPanel Spacing="12">
+            <TextBlock Text="Overlay" FontSize="14" FontWeight="SemiBold"
+                       Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"/>
+            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                <TextBlock Text="Position" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{DynamicResource OrbitalOverlayDimBrush}"/>
+                <ComboBox Grid.Row="0" Grid.Column="1"
+                          SelectedItem="{Binding OverlayPosition, Mode=TwoWay}"
+                          FontSize="13">
+                    <m:OverlayPosition>TopRight</m:OverlayPosition>
+                    <m:OverlayPosition>TopLeft</m:OverlayPosition>
+                    <m:OverlayPosition>BottomRight</m:OverlayPosition>
+                    <m:OverlayPosition>BottomLeft</m:OverlayPosition>
+                </ComboBox>
+                <CheckBox Grid.Row="1" Grid.Column="1" Content="Hide when focus moves away"
+                          FontSize="13"
+                          Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
+                          IsChecked="{Binding OverlayAutoHideOnFocusLoss, Mode=TwoWay}"/>
+                <CheckBox Grid.Row="2" Grid.Column="1" Content="Show completed todos by default"
+                          FontSize="13"
+                          Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
+                          IsChecked="{Binding ShowCompleted, Mode=TwoWay}"/>
+            </Grid>
+        </StackPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,24,0,0">
-            <Button Name="CancelButton" Content="Cancel" />
-            <Button Name="SaveButton" Content="Save" IsDefault="True" />
+        <!-- Startup section -->
+        <StackPanel Spacing="12">
+            <TextBlock Text="Startup" FontSize="14" FontWeight="SemiBold"
+                       Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"/>
+            <CheckBox Content="Start Orbital at login"
+                      FontSize="13"
+                      Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
+                      IsChecked="{Binding StartAtLogin, Mode=TwoWay}"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+            <Button Name="CancelButton" Content="Cancel" Classes="ghost"/>
+            <Button Name="SaveButton" Content="Save" Classes="primary" IsDefault="True"/>
         </StackPanel>
     </StackPanel>
 </Window>

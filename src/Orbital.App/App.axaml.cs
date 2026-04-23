@@ -176,8 +176,9 @@ public partial class App : Application, IDisposable
             }
         }
         host?.Dispose();
+        // LoggerFactory owns the FileLoggerProvider (via AddProvider) and
+        // disposes it on its own Dispose. Do not double-dispose.
         loggerFactory?.Dispose();
-        fileProvider?.Dispose();
         GC.SuppressFinalize(this);
     }
 

@@ -25,6 +25,7 @@ internal sealed class FileLogger : ILogger
         Exception? exception, Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel)) return;
+        ArgumentNullException.ThrowIfNull(formatter);
         var message = formatter(state, exception);
         var sb = new StringBuilder();
         sb.Append(DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss.fff zzz", System.Globalization.CultureInfo.InvariantCulture));

@@ -213,8 +213,8 @@
       <div class="dl-card" data-os="mac">
         <div class="os-icon">🍎</div>
         <div class="os-name">macOS</div>
-        <div class="os-detail">Apple Silicon · notarized</div>
-        <a class="dl-btn unavailable" href="#" data-asset="Orbital-osx-arm64">Download</a>
+        <div class="os-detail">Apple Silicon · installer with auto-updates</div>
+        <a class="dl-btn unavailable" href="#" data-asset="Orbital-osx-Setup.pkg">Download</a>
       </div>
       <div class="dl-card" data-os="win">
         <div class="os-icon">🪟</div>
@@ -290,17 +290,16 @@
       const version = tag.replace(/^v/, "");
       versionEl.textContent = `v${version}`;
 
-      // Map asset-key → href. Prefer installer formats that give auto-updates:
-      //   macOS → notarized .app zip (drag-to-Applications works fine; Velopack
-      //           tracks updates via the pkg that ships alongside)
-      //   Win   → Velopack Setup.exe (installs + registers for updates)
+      // Map asset-key → href. Prefer the Velopack installer formats: they
+      // register the app for in-app auto-updates via the tray "Check for
+      // updates" affordance. Raw .zip bundles work but updates stay frozen.
       const byKey = {};
       (data.assets || []).forEach(a => {
         const url  = a.browser_download_url;
         const name = a.name || "";
         if (!url) return;
-        if (name.startsWith("Orbital-osx-arm64-")  && name.endsWith(".zip")) byKey["Orbital-osx-arm64"] = url;
-        if (name === "Orbital-win-Setup.exe")                                 byKey["Orbital-win-Setup.exe"] = url;
+        if (name === "Orbital-osx-Setup.pkg")  byKey["Orbital-osx-Setup.pkg"]  = url;
+        if (name === "Orbital-win-Setup.exe")  byKey["Orbital-win-Setup.exe"]  = url;
       });
 
       // Card buttons
@@ -315,7 +314,7 @@
       });
 
       // Primary CTA → OS's download (if available)
-      const ctaKey = isMac ? "Orbital-osx-arm64" : isWin ? "Orbital-win-Setup.exe" : null;
+      const ctaKey = isMac ? "Orbital-osx-Setup.pkg" : isWin ? "Orbital-win-Setup.exe" : null;
       if (ctaKey && byKey[ctaKey]) cta.href = byKey[ctaKey];
     })
     .catch(() => {

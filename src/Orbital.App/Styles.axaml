@@ -65,6 +65,14 @@
         <Setter Property="Background" Value="{DynamicResource OrbitalWarningBrush}"/>
     </Style>
 
+    <!-- Chip text: white on today/overdue variant backgrounds. -->
+    <Style Selector="Border.chip.today TextBlock">
+        <Setter Property="Foreground" Value="#FFFFFFFF"/>
+    </Style>
+    <Style Selector="Border.chip.overdue TextBlock">
+        <Setter Property="Foreground" Value="#FFFFFFFF"/>
+    </Style>
+
     <!-- Default TextBox restyle: surface-filled, rounded, accent-on-focus. -->
     <Style Selector="TextBox">
         <Setter Property="Background" Value="{DynamicResource OrbitalSurface1Brush}"/>

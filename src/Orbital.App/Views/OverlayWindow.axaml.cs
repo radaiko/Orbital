@@ -2,10 +2,12 @@
 namespace Orbital.App.Views;
 
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using Orbital.Core.ViewModels;
@@ -35,6 +37,9 @@ public sealed partial class OverlayWindow : Window
         // If the pointer is released off the window (e.g. user alt-tabs mid-drag),
         // reset the drag state so the next press doesn't resurrect a stale from-index.
         list.AddHandler(PointerCaptureLostEvent, (_, _) => ResetDragState(), RoutingStrategies.Bubble);
+        // Avalonia 12 does not expose ItemContainerGenerator.IndexChanged; use LayoutUpdated
+        // (fires after each layout pass) to keep chip variant classes in sync.
+        list.LayoutUpdated += (_, _) => RefreshChipClasses();
     }
 
     private void ResetDragState()
@@ -127,6 +132,35 @@ public sealed partial class OverlayWindow : Window
         finally
         {
             ResetDragState();
+        }
+    }
+
+    private void RefreshChipClasses()
+    {
+        var list = this.FindControl<ListBox>("RowList");
+        if (list is null) return;
+        foreach (var item in list.GetLogicalDescendants().OfType<Border>())
+        {
+            if (!item.Classes.Contains("chip")) continue;
+            var row = item.DataContext as TodoRowViewModel;
+            if (row is null) continue;
+            var hasToday   = item.Classes.Contains("today");
+            var hasOverdue = item.Classes.Contains("overdue");
+            if (row.IsOverdue)
+            {
+                if (!hasOverdue) item.Classes.Add("overdue");
+                if (hasToday)    item.Classes.Remove("today");
+            }
+            else if (row.IsDueToday)
+            {
+                if (!hasToday)   item.Classes.Add("today");
+                if (hasOverdue)  item.Classes.Remove("overdue");
+            }
+            else
+            {
+                if (hasOverdue) item.Classes.Remove("overdue");
+                if (hasToday)   item.Classes.Remove("today");
+            }
         }
     }
 }

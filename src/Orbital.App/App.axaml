@@ -11,18 +11,42 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="OrbitalOverlayBackgroundBrush" Color="#CC1E1E1E"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayBorderBrush" Color="#33FFFFFF"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayForegroundBrush" Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayDimBrush" Color="#80FFFFFF"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayChipBackgroundBrush" Color="#22FFFFFF"/>
+                    <!-- Surfaces -->
+                    <SolidColorBrush x:Key="OrbitalOverlayBackgroundBrush" Color="#CC0A0A0A"/>
+                    <SolidColorBrush x:Key="OrbitalSurface1Brush" Color="#141414"/>
+                    <SolidColorBrush x:Key="OrbitalSurface2Brush" Color="#1E1E1E"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayBorderBrush" Color="#262626"/>
+                    <!-- Text -->
+                    <SolidColorBrush x:Key="OrbitalOverlayForegroundBrush" Color="#FAFAFA"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayDimBrush" Color="#888888"/>
+                    <SolidColorBrush x:Key="OrbitalTextMutedBrush" Color="#555555"/>
+                    <!-- Chip background reused from Surface1 for continuity -->
+                    <SolidColorBrush x:Key="OrbitalOverlayChipBackgroundBrush" Color="#141414"/>
+                    <!-- Accent -->
+                    <SolidColorBrush x:Key="OrbitalAccentBrush" Color="#3B82F6"/>
+                    <SolidColorBrush x:Key="OrbitalAccentHoverBrush" Color="#60A5FA"/>
+                    <!-- Semantic -->
+                    <SolidColorBrush x:Key="OrbitalWarningBrush" Color="#F59E0B"/>
+                    <SolidColorBrush x:Key="OrbitalDangerBrush" Color="#EF4444"/>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="OrbitalOverlayBackgroundBrush" Color="#F2FAFAFA"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayBorderBrush" Color="#33000000"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayForegroundBrush" Color="#FF1E1E1E"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayDimBrush" Color="#801E1E1E"/>
-                    <SolidColorBrush x:Key="OrbitalOverlayChipBackgroundBrush" Color="#221E1E1E"/>
+                    <!-- Surfaces -->
+                    <SolidColorBrush x:Key="OrbitalOverlayBackgroundBrush" Color="#CCFAFAFA"/>
+                    <SolidColorBrush x:Key="OrbitalSurface1Brush" Color="#F0F0F0"/>
+                    <SolidColorBrush x:Key="OrbitalSurface2Brush" Color="#E4E4E4"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayBorderBrush" Color="#D4D4D4"/>
+                    <!-- Text -->
+                    <SolidColorBrush x:Key="OrbitalOverlayForegroundBrush" Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayDimBrush" Color="#666666"/>
+                    <SolidColorBrush x:Key="OrbitalTextMutedBrush" Color="#999999"/>
+                    <!-- Chip -->
+                    <SolidColorBrush x:Key="OrbitalOverlayChipBackgroundBrush" Color="#F0F0F0"/>
+                    <!-- Accent -->
+                    <SolidColorBrush x:Key="OrbitalAccentBrush" Color="#2563EB"/>
+                    <SolidColorBrush x:Key="OrbitalAccentHoverBrush" Color="#3B82F6"/>
+                    <!-- Semantic -->
+                    <SolidColorBrush x:Key="OrbitalWarningBrush" Color="#D97706"/>
+                    <SolidColorBrush x:Key="OrbitalDangerBrush" Color="#DC2626"/>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

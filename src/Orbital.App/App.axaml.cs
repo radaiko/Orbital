@@ -100,9 +100,20 @@ public partial class App : Application, IDisposable
         var w = new SettingsWindow { DataContext = vm };
         w.SaveRequested += async () =>
         {
-            host.Settings = vm.Build();
-            await host.SaveSettingsAsync();
-            w.Close();
+            try
+            {
+                host.Settings = vm.Build();
+                await host.SaveSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                // async-void event handler: surface to log, never crash the app.
+                Debug.WriteLine($"Failed to save settings: {ex}");
+            }
+            finally
+            {
+                w.Close();
+            }
         };
         w.CancelRequested += () => w.Close();
         w.Show();

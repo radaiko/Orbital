@@ -133,10 +133,10 @@ for RID in $MAC_RIDS; do
         --notaryProfile "$NOTARY_PROFILE"
 done
 
-# Windows (cross-compile from Mac). The '[windows]' directive tells vpk to pack
-# for a non-host OS. Unsigned; SmartScreen will prompt on first install.
-echo "  ▸ vpk [windows] pack win-x64"
-vpk '[windows]' pack \
+# Windows (cross-compile from Mac). The '[win]' CLI directive opts into
+# cross-compilation. Unsigned; SmartScreen will prompt on first install.
+echo "  ▸ vpk [win] pack win-x64"
+vpk '[win]' pack \
     --packId dev.orbital.app \
     --packVersion "$VERSION" \
     --packDir "$PUBLISH/win-x64/payload" \

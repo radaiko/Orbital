@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orbital — A keyboard-driven todo list for your desktop</title>
+  <meta name="description" content="Local-first, keyboard-first todo list for macOS and Windows. Two hotkeys, drag-to-reorder, no cloud.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #262626;
+      --text: #fafafa;
+      --text-dim: #888;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --radius: 10px;
+      --max-w: 960px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); }
+
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; }
+
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .logo { display: flex; align-items: center; gap: 0.625rem; }
+    .logo img { width: 28px; height: 28px; border-radius: 6px; }
+    .logo span { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+    .gh-link {
+      display: flex; align-items: center; gap: 0.375rem;
+      color: var(--text-dim); font-size: 0.875rem;
+    }
+    .gh-link:hover { color: var(--text); }
+    .gh-link svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .hero { text-align: center; padding: 6rem 0 4rem; }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .hero .tagline {
+      margin-top: 1rem;
+      font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    .hero .sub {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 540px;
+      margin-left: auto; margin-right: auto;
+    }
+
+    .cta-row { margin-top: 2.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-size: 1rem; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+      text-decoration: none;
+    }
+    .btn-primary:hover { background: var(--accent-hover); color: #fff; }
+    .btn-primary svg { width: 18px; height: 18px; }
+    .version-badge { font-size: 0.8125rem; color: var(--text-dim); }
+
+    .downloads { padding: 3rem 0; }
+    .downloads h2 {
+      text-align: center; font-size: 1.25rem; font-weight: 600;
+      margin-bottom: 1.5rem; color: var(--text-dim);
+    }
+    .dl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .dl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+    .dl-card:hover { border-color: var(--accent); }
+    .dl-card.detected { border-color: var(--accent); }
+    .dl-card .os-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .dl-card .os-name { font-size: 0.9375rem; font-weight: 500; }
+    .dl-card .os-detail { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+    .dl-card .dl-btn {
+      display: inline-block; margin-top: 0.75rem;
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.8125rem; color: var(--text);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dl-card .dl-btn:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); color: var(--text); }
+    .dl-card .dl-btn.unavailable { opacity: 0.4; pointer-events: none; }
+
+    .features { padding: 4rem 0; }
+    .features h2 {
+      text-align: center; font-size: 1.5rem; font-weight: 600;
+      margin-bottom: 2rem;
+    }
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+    .feat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .feat-card .feat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .feat-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.375rem; }
+    .feat-card p { font-size: 0.875rem; color: var(--text-dim); line-height: 1.5; }
+
+    .screenshots { padding: 3rem 0; }
+    .shot-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+    @media (min-width: 800px) { .shot-grid { grid-template-columns: 1fr 1fr; } }
+    .shot-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+    }
+    .shot-card img {
+      max-width: 100%; height: auto; border-radius: 6px; display: block;
+      border: 1px solid var(--border);
+    }
+    .shot-card p {
+      margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-dim);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-dim);
+    }
+    .footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 0.75rem; }
+    .footer-links a { color: var(--text-dim); }
+    .footer-links a:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      .hero { padding: 4rem 0 3rem; }
+      .dl-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <a href="#" class="logo">
+      <img src="icon.svg" alt="Orbital icon" width="28" height="28">
+      <span>Orbital</span>
+    </a>
+    <a href="https://github.com/radaiko/Orbital" class="gh-link" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="hero container">
+    <h1>Orbital</h1>
+    <p class="tagline">A keyboard-driven todo list for your desktop.</p>
+    <p class="sub">Two hotkeys. Local JSON. Nothing between you and your list.</p>
+    <div class="cta-row">
+      <a id="primary-cta" href="https://github.com/radaiko/Orbital/releases" class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="cta-label">Download</span>
+      </a>
+      <span id="version-badge" class="version-badge"></span>
+    </div>
+  </section>
+
+  <section class="downloads container">
+    <h2>All downloads</h2>
+    <div class="dl-grid">
+      <div class="dl-card" data-os="mac">
+        <div class="os-icon">🍎</div>
+        <div class="os-name">macOS</div>
+        <div class="os-detail">Apple Silicon · notarized</div>
+        <a class="dl-btn unavailable" href="#" data-asset="Orbital-osx-arm64">Download</a>
+      </div>
+      <div class="dl-card" data-os="win">
+        <div class="os-icon">🪟</div>
+        <div class="os-name">Windows</div>
+        <div class="os-detail">x64 · portable</div>
+        <a class="dl-btn unavailable" href="#" data-asset="Orbital-win-x64">Download</a>
+      </div>
+      <div class="dl-card" data-os="linux">
+        <div class="os-icon">🐧</div>
+        <div class="os-name">Linux</div>
+        <div class="os-detail">Build from source</div>
+        <a class="dl-btn" href="https://github.com/radaiko/Orbital#build-from-source">Instructions</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="features container">
+    <h2>What's inside</h2>
+    <div class="feat-grid">
+      <div class="feat-card"><div class="feat-icon">⌨️</div><h3>Keyboard-first</h3><p>Every action, every todo, every edit — no mouse required.</p></div>
+      <div class="feat-card"><div class="feat-icon">🔒</div><h3>100% local</h3><p>No account, no cloud, no telemetry. Your data lives in a JSON file you own.</p></div>
+      <div class="feat-card"><div class="feat-icon">🔀</div><h3>Drag to reorder</h3><p>No priority field. You rank things with your hands.</p></div>
+      <div class="feat-card"><div class="feat-icon">🌗</div><h3>Theme-aware</h3><p>Follows your system's light/dark setting without fuss.</p></div>
+      <div class="feat-card"><div class="feat-icon">🔄</div><h3>Auto-updates</h3><p>Background checks via GitHub Releases. Update when you choose.</p></div>
+      <div class="feat-card"><div class="feat-icon">📥</div><h3>Quick add anywhere</h3><p><code>⌃⌥T</code> summons a popup. Type, Enter, gone.</p></div>
+    </div>
+  </section>
+
+  <section class="screenshots container">
+    <div class="shot-grid">
+      <div class="shot-card"><img src="screenshot-overlay.png" alt="Orbital overlay window"><p>The overlay — always-on-top, keyboard-driven</p></div>
+      <div class="shot-card"><img src="screenshot-quickadd.png" alt="Orbital quick-add popup"><p>The quick-add popup — title + natural-language date</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/radaiko/Orbital">GitHub</a>
+      <a href="https://github.com/radaiko/Orbital/blob/main/LICENSE">License</a>
+      <a href="https://github.com/radaiko/Orbital/releases">Releases</a>
+    </div>
+    <div>© radaiko — Orbital is open source, MIT-licensed.</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const REPO = "radaiko/Orbital";
+  const cta       = document.getElementById("primary-cta");
+  const ctaLabel  = document.getElementById("cta-label");
+  const versionEl = document.getElementById("version-badge");
+
+  // OS detection
+  const ua = navigator.userAgent || "";
+  const platform = (navigator.userAgentData?.platform || navigator.platform || "").toLowerCase();
+  const isMac   = /mac|darwin/.test(platform) || /mac|darwin/i.test(ua);
+  const isWin   = /win/.test(platform)        || /windows/i.test(ua);
+  const isLinux = !isMac && !isWin;
+
+  const detectedOs = isMac ? "mac" : isWin ? "win" : "linux";
+  const card = document.querySelector(`.dl-card[data-os="${detectedOs}"]`);
+  if (card) card.classList.add("detected");
+  ctaLabel.textContent = isMac ? "Download for macOS" : isWin ? "Download for Windows" : "Download";
+
+  // Fetch latest release
+  fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { Accept: "application/vnd.github+json" } })
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("No releases yet")))
+    .then(data => {
+      const tag     = data.tag_name;
+      const version = tag.replace(/^v/, "");
+      versionEl.textContent = `v${version}`;
+
+      // Map asset-prefix → href
+      const byPrefix = {};
+      (data.assets || []).forEach(a => {
+        const url = a.browser_download_url;
+        if (!url) return;
+        if (url.includes("Orbital-osx-arm64-") && url.endsWith(".zip")) byPrefix["Orbital-osx-arm64"] = url;
+        if (url.includes("Orbital-win-x64-")   && url.endsWith(".zip")) byPrefix["Orbital-win-x64"]   = url;
+      });
+
+      // Card buttons
+      document.querySelectorAll(".dl-card .dl-btn[data-asset]").forEach(btn => {
+        const prefix = btn.getAttribute("data-asset");
+        const href = byPrefix[prefix];
+        if (href) {
+          btn.href = href;
+          btn.classList.remove("unavailable");
+          btn.textContent = "Download";
+        }
+      });
+
+      // Primary CTA → OS's download (if available)
+      const ctaKey = isMac ? "Orbital-osx-arm64" : isWin ? "Orbital-win-x64" : null;
+      if (ctaKey && byPrefix[ctaKey]) cta.href = byPrefix[ctaKey];
+    })
+    .catch(() => {
+      // Pre-first-release: fall back to the releases index
+      cta.href = `https://github.com/${REPO}/releases`;
+      versionEl.style.display = "none";
+    });
+})();
+</script>
+</body>
+</html>

@@ -23,5 +23,5 @@ launchSettings.json
 # Orbital data (never commit user data)
 **/todos.json
 **/todos.json.tmp
-**/todos.backup.json
+**/*.backup.json
 **/settings.json

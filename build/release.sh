@@ -31,6 +31,7 @@ command -v dotnet    >/dev/null || { echo "✗ dotnet not in PATH"; exit 1; }
 command -v gh        >/dev/null || { echo "✗ gh (GitHub CLI) not in PATH"; exit 1; }
 command -v xcrun     >/dev/null || { echo "✗ xcrun not in PATH (need Xcode CLI tools)"; exit 1; }
 command -v vpk       >/dev/null || { echo "✗ vpk not in PATH. Run: dotnet tool install -g vpk"; exit 1; }
+command -v zip       >/dev/null || { echo "✗ zip not in PATH"; exit 1; }
 gh auth status >/dev/null 2>&1 || { echo "✗ gh not authenticated. Run 'gh auth login'."; exit 1; }
 
 # --- Version ---
@@ -85,7 +86,7 @@ for RID in $MAC_RIDS; do
 done
 
 echo "▸ macOS artifacts:"
-printf '  %s\n' "${MAC_ARTIFACTS[@]}"
+printf '  %s\n' ${MAC_ARTIFACTS[@]+"${MAC_ARTIFACTS[@]}"}
 
 # --- Windows cross-compile ---
 echo "▸ Building Windows x64"
@@ -155,13 +156,22 @@ PREV_TAG="$(git -C "$ROOT" describe --tags --abbrev=0 2>/dev/null || true)"
     echo
 } > "$NOTES_FILE"
 
+# Push the tag BEFORE creating the GitHub release so a mid-script failure
+# leaves a consistent state: either the tag exists on origin (and the release
+# may or may not exist), or neither exists. If we created the release first
+# and the push failed, the re-run's tag-existence check at the top would fail
+# to detect the orphaned release.
+echo "▸ Pushing tag $TAG"
+git -C "$ROOT" tag "$TAG" 2>/dev/null || true
+git -C "$ROOT" push origin "$TAG"
+
 echo "▸ Creating GitHub release $TAG"
 gh release create "$TAG" \
     --title "Orbital $VERSION" \
     --notes-file "$NOTES_FILE"
 
 echo "▸ Uploading artifacts"
-for f in "${MAC_ARTIFACTS[@]}"; do
+for f in ${MAC_ARTIFACTS[@]+"${MAC_ARTIFACTS[@]}"}; do
     gh release upload "$TAG" "$f"
 done
 gh release upload "$TAG" "$WIN_ZIP"
@@ -169,10 +179,6 @@ gh release upload "$TAG" "$WIN_ZIP"
 # All Velopack artifacts (nupkg, RELEASES, Setup, Portable.zip)
 find "$VPK_OUT" -maxdepth 2 -type f \( -name '*.nupkg' -o -name '*Setup*' -o -name 'RELEASES*' -o -name '*Portable.zip' \) \
     -exec gh release upload "$TAG" {} \;
-
-echo "▸ Pushing tag"
-git -C "$ROOT" tag "$TAG" 2>/dev/null || true
-git -C "$ROOT" push origin "$TAG"
 
 URL="$(gh release view "$TAG" --json url -q .url)"
 echo "✓ Release complete: $URL"

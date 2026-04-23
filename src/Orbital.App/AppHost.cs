@@ -30,10 +30,23 @@ public sealed class AppHost : IDisposable
 
     public async Task LoadAsync()
     {
-        Settings = await settingsStore.LoadAsync();
+        var (settings, settingsExisted) = await settingsStore.LoadWithProvenanceAsync();
+        Settings = settings;
         var todos = await todoStore.LoadAsync();
         Todos.Clear();
         foreach (var t in todos) Todos.Add(t);
+
+        if (!settingsExisted && Todos.Count == 0)
+        {
+            Todos.Add(new Todo
+            {
+                Id = Guid.NewGuid(),
+                Title = "Welcome to Orbital — press Ctrl+Alt+L to open, Ctrl+Alt+T to add",
+                CreatedAt = DateTimeOffset.Now,
+                Order = 0,
+            });
+            ScheduleSaveTodos();
+        }
     }
 
     public void ScheduleSaveTodos()

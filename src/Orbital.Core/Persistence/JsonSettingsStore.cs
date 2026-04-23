@@ -1,7 +1,10 @@
 // src/Orbital.Core/Persistence/JsonSettingsStore.cs
 namespace Orbital.Core.Persistence;
 
+using System.IO;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Orbital.Core.Models;
 
 public sealed class JsonSettingsStore : ISettingsStore, IDisposable
@@ -22,12 +25,16 @@ public sealed class JsonSettingsStore : ISettingsStore, IDisposable
 
     public void Dispose() => writeLock.Dispose();
 
-    public async Task<AppSettings> LoadAsync(CancellationToken ct = default)
+    public async Task<AppSettings> LoadAsync(CancellationToken ct = default) =>
+        (await LoadWithProvenanceAsync(ct)).settings;
+
+    public async Task<(AppSettings settings, bool existed)> LoadWithProvenanceAsync(CancellationToken ct = default)
     {
-        if (!File.Exists(filePath)) return new AppSettings();
+        if (!File.Exists(filePath)) return (new AppSettings(), false);
         var json = await File.ReadAllTextAsync(filePath, ct);
-        if (string.IsNullOrWhiteSpace(json)) return new AppSettings();
-        return JsonSerializer.Deserialize<AppSettings>(json, options) ?? new AppSettings();
+        if (string.IsNullOrWhiteSpace(json)) return (new AppSettings(), true);
+        var s = JsonSerializer.Deserialize<AppSettings>(json, options) ?? new AppSettings();
+        return (s, true);
     }
 
     public async Task SaveAsync(AppSettings settings, CancellationToken ct = default)

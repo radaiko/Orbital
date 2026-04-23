@@ -50,4 +50,19 @@ public sealed class JsonSettingsStoreTests : IDisposable
         var loaded = await store.LoadAsync();
         loaded.Should().BeEquivalentTo(s);
     }
+
+    [Fact]
+    public async Task LoadWithProvenanceAsync_reports_false_when_file_missing()
+    {
+        var (_, existed) = await store.LoadWithProvenanceAsync();
+        existed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LoadWithProvenanceAsync_reports_true_after_save()
+    {
+        await store.SaveAsync(new AppSettings());
+        var (_, existed) = await store.LoadWithProvenanceAsync();
+        existed.Should().BeTrue();
+    }
 }

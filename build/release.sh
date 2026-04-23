@@ -111,9 +111,16 @@ VPK_OUT="$PUBLISH/velopack"
 rm -rf "$VPK_OUT"
 mkdir -p "$VPK_OUT"
 
-# macOS (one entry per RID)
+# Velopack Mac .pkg installer signing identities.
+# The notary profile is stored in the keychain by `xcrun notarytool store-credentials`
+# (run once manually). Name must match what was stored.
+INSTALL_IDENTITY="Developer ID Installer: Aiko Radlingmayr ($APPLE_TEAM_ID)"
+NOTARY_PROFILE="orbital-notary"
+
+# macOS (one entry per RID). vpk runs natively on the host OS so we omit the
+# OS directive here. Signing + notarization on the .pkg so the updater install
+# is smooth.
 for RID in $MAC_RIDS; do
-    vpk_platform="osx"
     echo "  ▸ vpk pack $RID"
     vpk pack \
         --packId dev.orbital.app \
@@ -121,18 +128,20 @@ for RID in $MAC_RIDS; do
         --packDir "$PUBLISH/$RID/payload" \
         --mainExe Orbital.App \
         --outputDir "$VPK_OUT/$RID" \
-        --runtime "$vpk_platform-$(echo "$RID" | sed 's/osx-//')"
+        --signAppIdentity "$CODESIGN_IDENTITY" \
+        --signInstallIdentity "$INSTALL_IDENTITY" \
+        --notaryProfile "$NOTARY_PROFILE"
 done
 
-# Windows
-echo "  ▸ vpk pack win-x64"
-vpk pack \
+# Windows (cross-compile from Mac). The '[windows]' directive tells vpk to pack
+# for a non-host OS. Unsigned; SmartScreen will prompt on first install.
+echo "  ▸ vpk [windows] pack win-x64"
+vpk '[windows]' pack \
     --packId dev.orbital.app \
     --packVersion "$VERSION" \
     --packDir "$PUBLISH/win-x64/payload" \
     --mainExe Orbital.App.exe \
-    --outputDir "$VPK_OUT/win-x64" \
-    --runtime win-x64
+    --outputDir "$VPK_OUT/win-x64"
 
 echo "▸ Velopack packages:"
 find "$VPK_OUT" -type f \( -name '*.nupkg' -o -name '*Setup*' -o -name 'RELEASES*' -o -name '*.zip' \)

@@ -21,6 +21,7 @@ public partial class App : Application, IDisposable
     private OverlayController? overlay;
     private IDisposable? quickAddHotkeyReg;
     private IDisposable? overlayHotkeyReg;
+    private readonly IAutoStartService autoStart = AutoStartServiceFactory.Create();
 
     public AppHost? Host => host;
 
@@ -43,6 +44,20 @@ public partial class App : Application, IDisposable
     {
         host = new AppHost();
         await host.LoadAsync();
+
+        // Sync StartAtLogin setting with the actual OS autostart state on first boot.
+        if (host.Settings.StartAtLogin != autoStart.IsEnabled)
+        {
+            host.Settings = host.Settings with { StartAtLogin = autoStart.IsEnabled };
+            await host.SaveSettingsAsync();
+        }
+
+        // Apply autostart changes whenever settings are saved.
+        host.SettingsChanged += () =>
+        {
+            if (host.Settings.StartAtLogin && !autoStart.IsEnabled) autoStart.Enable();
+            else if (!host.Settings.StartAtLogin && autoStart.IsEnabled) autoStart.Disable();
+        };
 
         quickAdd = new QuickAddController(host);
         overlay = new OverlayController(host);

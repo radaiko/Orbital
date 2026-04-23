@@ -71,11 +71,14 @@ public sealed class SharpHookGlobalHotkeyService : IGlobalHotkeyService
         _ => null,
     };
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
+        // Clear registrations first so any in-flight UI-thread posts see an
+        // empty handler set and become no-ops.
+        registrations.Clear();
         hook.KeyPressed -= OnKeyPressed;
         hook.Dispose();
-        await Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     private sealed class UnregisterHandle(Action onDispose) : IDisposable

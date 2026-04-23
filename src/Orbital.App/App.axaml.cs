@@ -40,11 +40,15 @@ public partial class App : Application, IDisposable
 
         hotkeys = new SharpHookGlobalHotkeyService();
 
-        // StartAsync runs the low-level hook on a background thread.
-        // On macOS the OS may deny Accessibility permission; wrap to prevent crash.
+        // StartAsync runs the low-level hook on a background thread. On macOS
+        // the OS may deny Accessibility permission; handle both synchronous and
+        // asynchronous failures so an unobserved task doesn't crash the app.
         try
         {
-            _ = hotkeys.StartAsync();
+            var startTask = hotkeys.StartAsync();
+            _ = startTask.ContinueWith(
+                t => Debug.WriteLine($"Global hotkey hook failed: {t.Exception}"),
+                TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception ex)
         {
@@ -66,6 +70,7 @@ public partial class App : Application, IDisposable
         {
             await host!.FlushAsync();
             if (hotkeys is not null) await hotkeys.DisposeAsync();
+            host.Dispose();
             tray?.Dispose();
             desktop.Shutdown();
         };
@@ -92,6 +97,14 @@ public partial class App : Application, IDisposable
     public void Dispose()
     {
         tray?.Dispose();
+        // Best-effort synchronous disposal path for abnormal exits (SIGTERM etc.).
+        // The normal QuitRequested path disposes these with async flush first.
+        if (hotkeys is not null)
+        {
+            try { hotkeys.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
+            catch (Exception ex) { Debug.WriteLine($"Hotkey disposal failed: {ex}"); }
+        }
+        host?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

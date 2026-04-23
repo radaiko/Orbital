@@ -13,7 +13,8 @@ public sealed class AppHost : IDisposable
 {
     private readonly ITodoStore todoStore;
     private readonly ISettingsStore settingsStore;
-    private readonly CancellationTokenSource debounceTokenSource = new();
+    private readonly Lock debounceLock = new();
+    private CancellationTokenSource? debounceCts;
     private Task? pendingSave;
 
     public ObservableCollection<Todo> Todos { get; } = new();
@@ -37,14 +38,24 @@ public sealed class AppHost : IDisposable
 
     public void ScheduleSaveTodos()
     {
-        // Debounce: if called multiple times within 250ms, only the last save runs.
-        var token = debounceTokenSource.Token;
-        pendingSave = Task.Run(async () =>
+        // Debounce: cancel any in-flight delay, start a fresh one. Only the
+        // last scheduled save actually writes to disk.
+        CancellationTokenSource cts;
+        lock (debounceLock)
         {
-            try { await Task.Delay(250, token); }
-            catch (TaskCanceledException) { return; }
-            await todoStore.SaveAsync(Todos.ToArray());
-        }, token);
+            debounceCts?.Cancel();
+            debounceCts?.Dispose();
+            debounceCts = new CancellationTokenSource();
+            cts = debounceCts;
+        }
+        pendingSave = RunDebouncedSave(cts.Token);
+    }
+
+    private async Task RunDebouncedSave(CancellationToken ct)
+    {
+        try { await Task.Delay(250, ct); }
+        catch (TaskCanceledException) { return; }
+        await todoStore.SaveAsync(Todos.ToArray(), ct);
     }
 
     public async Task SaveSettingsAsync()
@@ -62,8 +73,12 @@ public sealed class AppHost : IDisposable
 
     public void Dispose()
     {
-        debounceTokenSource.Cancel();
-        debounceTokenSource.Dispose();
+        lock (debounceLock)
+        {
+            debounceCts?.Cancel();
+            debounceCts?.Dispose();
+            debounceCts = null;
+        }
         GC.SuppressFinalize(this);
     }
 }

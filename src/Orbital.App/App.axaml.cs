@@ -16,6 +16,7 @@ public partial class App : Application, IDisposable
     private AppHost? host;
     private SharpHookGlobalHotkeyService? hotkeys;
     private QuickAddController? quickAdd;
+    private OverlayController? overlay;
 
     public AppHost? Host => host;
 
@@ -40,6 +41,7 @@ public partial class App : Application, IDisposable
         await host.LoadAsync();
 
         quickAdd = new QuickAddController(host);
+        overlay = new OverlayController(host);
 
         hotkeys = new SharpHookGlobalHotkeyService();
 
@@ -59,13 +61,11 @@ public partial class App : Application, IDisposable
         }
 
         hotkeys.Register(host.Settings.QuickAddHotkey, () => quickAdd.Toggle());
-        hotkeys.Register(host.Settings.ToggleOverlayHotkey, () =>
-        {
-            Debug.WriteLine("Overlay hotkey pressed");
-        });
+        hotkeys.Register(host.Settings.ToggleOverlayHotkey, () => overlay.Toggle());
 
         tray = new TrayIconController();
         tray.QuickAddRequested += quickAdd.Toggle;
+        tray.ToggleOverlayRequested += overlay.Toggle;
         tray.QuitRequested += async () =>
         {
             await host!.FlushAsync();

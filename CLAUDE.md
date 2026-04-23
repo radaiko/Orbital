@@ -37,6 +37,7 @@ Local-first personal todo app for Windows + macOS. Tray-resident, two global hot
 - **macOS Accessibility permission** is required for SharpHook to receive key events. On denial, the app shouldn't crash — it should show a banner in the tray menu explaining how to enable.
 - **macOS `LSUIElement`** — the `.app` bundle's `Info.plist` must set `LSUIElement=true` so no Dock icon shows. See `build/macos/Info.plist.template`.
 - **Windows single-instance** — enforced via named mutex `Global\Orbital.SingleInstance`. On macOS we use a pidfile with `flock`.
+- **Windows tray left-click**: Avalonia 12.0.1 does not expose a public API to open a `NativeMenu` programmatically. Left-click on the tray icon fires `TrayIcon.Clicked` but there is no `NativeMenu.Open()` method to show the context menu from that handler. Right-click works as expected. On macOS the OS already opens the menu on any click (native menu-bar behaviour), so left-click works there out of the box. Revisit when a future Avalonia release adds a programmatic open API.
 
 ## Packaging
 

@@ -39,6 +39,7 @@ public sealed class TrayIconController : IDisposable
         trayIcon.Menu = BuildMenu();
 
         TrayIcon.SetIcons(Application.Current!, new TrayIcons { trayIcon });
+        trayIcon.Clicked += OnTrayClicked;
     }
 
     public void SetAccessibilityDenied(bool denied)
@@ -150,6 +151,21 @@ public sealed class TrayIconController : IDisposable
         menu.Add(quit);
 
         return menu;
+    }
+
+    private void OnTrayClicked(object? sender, EventArgs e)
+    {
+        // Avalonia 12.0.1 fires TrayIcon.Clicked on left-click on all platforms.
+        //
+        // macOS: the OS already opens the NativeMenu on any click (left or right)
+        // as part of macOS menu-bar behaviour — this handler is effectively a no-op
+        // on that platform because the menu appears before we get here.
+        //
+        // Windows: TrayIcon.Clicked fires for left-clicks, but Avalonia 12.0.1
+        // does not expose a public NativeMenu.Open() or equivalent method to
+        // programmatically show the menu. Right-click still works as expected via
+        // the OS context-menu mechanism. See CLAUDE.md "Known platform quirks" for
+        // the documented limitation.
     }
 
     private static WindowIcon LoadIcon()

@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Orbital.Core.ViewModels"
+        x:Class="Orbital.App.Views.OverlayWindow"
+        x:DataType="vm:OverlayViewModel"
+        Width="360" Height="520"
+        WindowDecorations="None"
+        CanResize="False"
+        Topmost="True"
+        ShowInTaskbar="False"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="#CC1E1E1E"
+        CornerRadius="10">
+    <Border CornerRadius="10" BorderBrush="#33FFFFFF" BorderThickness="1">
+        <DockPanel LastChildFill="True">
+            <!-- Header -->
+            <Grid DockPanel.Dock="Top" Height="36" ColumnDefinitions="*,Auto,Auto" Margin="12,6">
+                <TextBlock Grid.Column="0" Text="Orbital" Foreground="White"
+                           FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button Name="SettingsButton" Grid.Column="1" Width="24" Height="24"
+                        Background="Transparent" BorderThickness="0" Content="⚙︎"
+                        Foreground="#B0FFFFFF" />
+                <Button Name="CloseButton" Grid.Column="2" Width="24" Height="24"
+                        Background="Transparent" BorderThickness="0" Content="✕"
+                        Foreground="#B0FFFFFF" />
+            </Grid>
+            <!-- Footer -->
+            <Grid DockPanel.Dock="Bottom" Height="32" ColumnDefinitions="*,Auto" Margin="12,4">
+                <TextBlock Grid.Column="0" Foreground="#80FFFFFF" FontSize="11"
+                           VerticalAlignment="Center"
+                           Text="{Binding Rows.Count, StringFormat='{}{0} items'}" />
+                <ToggleButton Grid.Column="1" Content="show ✓" Padding="6,2"
+                              Foreground="#B0FFFFFF" Background="Transparent" BorderThickness="0"
+                              FontSize="11"
+                              IsChecked="{Binding ShowCompleted, Mode=TwoWay}" />
+            </Grid>
+            <!-- List -->
+            <ListBox Name="RowList"
+                     ItemsSource="{Binding Rows}"
+                     Background="Transparent" BorderThickness="0"
+                     SelectionMode="Single"
+                     Padding="4"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TodoRowViewModel">
+                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="4,2" Height="32">
+                            <CheckBox Grid.Column="0"
+                                      IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                                      VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Title}"
+                                       Foreground="White"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis">
+                                <TextBlock.Styles>
+                                    <Style Selector="TextBlock[Tag='true']">
+                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                        <Setter Property="Foreground" Value="#80FFFFFF" />
+                                    </Style>
+                                </TextBlock.Styles>
+                            </TextBlock>
+                            <Border Grid.Column="2" Padding="6,2" CornerRadius="4"
+                                    Background="#22FFFFFF" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DueLabel}"
+                                           FontSize="11" Foreground="#D0FFFFFF" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Border>
+</Window>

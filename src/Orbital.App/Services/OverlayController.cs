@@ -2,9 +2,9 @@
 namespace Orbital.App.Services;
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Threading;
 using Orbital.App.Views;
 using Orbital.Core.Models;
 using Orbital.Core.ViewModels;
@@ -17,7 +17,11 @@ public sealed class OverlayController
 
     public event Action? SettingsRequested;
 
-    public OverlayController(AppHost host) { this.host = host; }
+    public OverlayController(AppHost host)
+    {
+        this.host = host;
+        host.SettingsChanged += ApplySettingsToLiveOverlay;
+    }
 
     public void Toggle()
     {
@@ -42,9 +46,45 @@ public sealed class OverlayController
         if (window is not null) return;
         vm = new OverlayViewModel(host.Todos) { ShowCompleted = host.Settings.ShowCompleted };
         vm.TodosMutated += () => host.ScheduleSaveTodos();
+        vm.PropertyChanged += OnVmPropertyChanged;
         window = new OverlayWindow { DataContext = vm };
-        window.CloseRequested += () => Dispatcher.UIThread.Post(() => window.Hide());
+        window.Deactivated += OnWindowDeactivated;
+        window.CloseRequested += () => window!.Hide();
         window.SettingsRequested += () => SettingsRequested?.Invoke();
+    }
+
+    private void OnWindowDeactivated(object? sender, EventArgs e)
+    {
+        if (host.Settings.OverlayAutoHideOnFocusLoss)
+            window?.Hide();
+    }
+
+    private async void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (vm is null) return;
+        if (e.PropertyName != nameof(OverlayViewModel.ShowCompleted)) return;
+        // Persist the in-overlay toggle. Guard against echo: only save when
+        // Settings actually differ from the VM (otherwise SettingsChanged → VM
+        // assignment would loop).
+        if (host.Settings.ShowCompleted == vm.ShowCompleted) return;
+        host.Settings = host.Settings with { ShowCompleted = vm.ShowCompleted };
+        try
+        {
+            await host.SaveSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Persist ShowCompleted failed: {ex}");
+        }
+    }
+
+    private void ApplySettingsToLiveOverlay()
+    {
+        if (vm is null) return;
+        if (vm.ShowCompleted != host.Settings.ShowCompleted)
+            vm.ShowCompleted = host.Settings.ShowCompleted;
+        if (window is { IsVisible: true })
+            PositionOnActiveScreen(window);
     }
 
     private void PositionOnActiveScreen(OverlayWindow w)

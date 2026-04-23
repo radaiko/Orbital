@@ -23,7 +23,8 @@ public sealed partial class OverlayWindow : Window
     {
         InitializeComponent();
         KeyDown += OnKeyDown;
-        Deactivated += (_, _) => CloseRequested?.Invoke();
+        // Deactivated is wired up by OverlayController so it can honour the
+        // OverlayAutoHideOnFocusLoss setting at event time.
         this.FindControl<Button>("CloseButton")!.Click += (_, _) => CloseRequested?.Invoke();
         this.FindControl<Button>("SettingsButton")!.Click += (_, _) => SettingsRequested?.Invoke();
 

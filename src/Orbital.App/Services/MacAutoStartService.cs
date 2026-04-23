@@ -4,6 +4,7 @@ namespace Orbital.App.Services;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Security;
 
 public sealed class MacAutoStartService : IAutoStartService
 {
@@ -19,6 +20,8 @@ public sealed class MacAutoStartService : IAutoStartService
     public void Enable()
     {
         Directory.CreateDirectory(LaunchAgentsDir);
+        // XML-escape the path — Application folders may contain &, <, > etc.
+        var escapedExe = SecurityElement.Escape(exePath);
         var plist =
 $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <!DOCTYPE plist PUBLIC ""-//Apple//DTD PLIST 1.0//EN"" ""http://www.apple.com/DTDs/PropertyList-1.0.dtd"">
@@ -27,7 +30,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
     <key>Label</key><string>{Label}</string>
     <key>ProgramArguments</key>
     <array>
-        <string>{exePath}</string>
+        <string>{escapedExe}</string>
     </array>
     <key>RunAtLoad</key><true/>
     <key>LimitLoadToSessionType</key><string>Aqua</string>
@@ -51,6 +54,9 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
             using var p = Process.Start(new ProcessStartInfo(fileName, args) { UseShellExecute = false });
             p?.WaitForExit();
         }
-        catch { /* swallow; user can recover via toggle */ }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[AutoStart] launchctl failed: {ex.Message}");
+        }
     }
 }

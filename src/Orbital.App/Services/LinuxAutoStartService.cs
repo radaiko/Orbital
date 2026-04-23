@@ -22,7 +22,7 @@ public sealed class LinuxAutoStartService : IAutoStartService
 $@"[Desktop Entry]
 Type=Application
 Name=Orbital
-Exec={exePath}
+Exec=""{exePath}""
 X-GNOME-Autostart-enabled=true
 Hidden=false
 Terminal=false

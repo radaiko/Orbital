@@ -51,7 +51,7 @@ Five work areas, implemented in order:
 - `Info.plist.template` has its `CFBundleShortVersionString` and `CFBundleVersion` values replaced at build time using `sed`, keyed off the same version.
 
 ### 4.3 About dialog
-- New `src/Orbital.App/Views/AboutWindow.axaml` + `AboutViewModel` (lives in `Orbital.Core.ViewModels`).
+- New `src/Orbital.App/Views/AboutWindow.axaml` + `AboutViewModel` (lives in `Orbital.Core.ViewModels`; constructor takes a `string version` injected by the App layer, which resolves it via `typeof(App).Assembly.GetName().Version`).
 - Opened from tray menu "About Orbital…" (new menu item above Quit) and from Settings (bottom-right link "About").
 - Shows:
   - App icon (from assets)
@@ -115,7 +115,7 @@ Five work areas, implemented in order:
   DueDate: null
   Order: 0
   ```
-- Detection of "settings.json did not previously exist" is done via a boolean returned from `JsonSettingsStore.LoadAsync` (new overload `(AppSettings, bool wasDefaulted)`).
+- Detection of "settings.json did not previously exist" is done via a boolean returned from `JsonSettingsStore.LoadAsync` (new overload `(AppSettings, bool wasDefaulted)`). Keying off `settings.json` rather than `todos.json` means a user who deletes their todos but keeps settings does not see the welcome todo reappear.
 
 ## 5. Branding pipeline (Area 2)
 
@@ -345,6 +345,7 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, A
 - If no matching asset yet (pre-first-release), CTA falls back to the releases index.
 - OS detection: prefer `navigator.userAgentData.platform` when available, fall back to `navigator.userAgent`. Mac: "Darwin" / "Macintosh"; Windows: "Windows"; Linux: everything else.
 - The `.dl-card.detected` class is applied on the matching card.
+- **Fallback for pre-first-release state:** if the `/releases/latest` fetch returns a 404 or any error, the CTA points at `https://github.com/radaiko/Orbital/releases` (the releases index page) and the version badge is hidden.
 
 ### 8.6 License gate
 - MIT LICENSE file added to repo root before first release. `docs/index.html` footer links to it.

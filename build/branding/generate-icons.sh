@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # build/branding/generate-icons.sh — rebuild all icon artifacts from icon.svg
+# Requires macOS (uses iconutil).
 set -euo pipefail
+
+[[ "$(uname)" == "Darwin" ]] || { echo "This script requires macOS (needs iconutil)."; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -17,8 +20,8 @@ need magick       "brew install imagemagick"
 mkdir -p "$ROOT/docs"
 cp "$SRC" "$ROOT/docs/icon.svg"
 
-# 2. PNG set for landing page, store listings, macOS iconset
-SIZES=(16 32 64 128 256 512 1024)
+# 2. PNG set for landing page, store listings, macOS iconset, Windows ICO
+SIZES=(16 32 48 64 128 256 512 1024)
 for s in "${SIZES[@]}"; do
     rsvg-convert -w "$s" -h "$s" "$SRC" -o "$SCRIPT_DIR/icon-$s.png"
 done
@@ -40,11 +43,11 @@ cp "$SCRIPT_DIR/icon-1024.png" "$ICONSET/icon_512x512@2x.png"
 iconutil -c icns -o "$SCRIPT_DIR/AppIcon.icns" "$ICONSET"
 rm -rf "$ICONSET"
 
-# 4. Windows ICO (16, 32, 48, 256)
+# 4. Windows ICO (16, 32, 48, 256) — 48 is the Windows Explorer "large icon" size.
 magick -background none \
     "$SCRIPT_DIR/icon-16.png" \
     "$SCRIPT_DIR/icon-32.png" \
-    "$SCRIPT_DIR/icon-64.png" \
+    "$SCRIPT_DIR/icon-48.png" \
     "$SCRIPT_DIR/icon-256.png" \
     "$SCRIPT_DIR/AppIcon.ico"
 
@@ -55,7 +58,7 @@ rsvg-convert -w 32 -h 32 "$SCRIPT_DIR/tray-icon.svg" -o "$ROOT/src/Orbital.App/A
 
 # 6. Only keep the sizes we care about long-term in branding/
 KEEP=(128 256 512 1024)
-for s in 16 32 64; do
+for s in 16 32 48 64; do
     rm -f "$SCRIPT_DIR/icon-$s.png"
 done
 

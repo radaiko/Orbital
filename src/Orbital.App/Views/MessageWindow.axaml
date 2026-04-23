@@ -1,0 +1,17 @@
+<!-- src/Orbital.App/Views/MessageWindow.axaml -->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Orbital.App.Views.MessageWindow"
+        Title="Orbital"
+        Width="440" Height="200"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen">
+    <StackPanel Margin="24" Spacing="12">
+        <TextBlock Name="TitleText" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Name="MessageText" TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Name="CancelButton" Content="Cancel" IsVisible="False" />
+            <Button Name="ConfirmButton" Content="OK" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

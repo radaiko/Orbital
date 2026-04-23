@@ -3,10 +3,12 @@ namespace Orbital.App;
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Orbital.App.Logging;
 using Orbital.App.Services;
@@ -27,6 +29,7 @@ public partial class App : Application, IDisposable
     private ILoggerFactory? loggerFactory;
     private FileLoggerProvider? fileProvider;
     private ILogger<App>? log;
+    private DialogService? dialogs;
 
     public AppHost? Host => host;
 
@@ -51,6 +54,7 @@ public partial class App : Application, IDisposable
         log = loggerFactory.CreateLogger<App>();
         var version = typeof(App).Assembly.GetName().Version?.ToString(3);
         LogStarting(log, version);
+        dialogs = new DialogService();
 
         autoStart = AutoStartServiceFactory.Create(loggerFactory);
 
@@ -82,9 +86,17 @@ public partial class App : Application, IDisposable
         try
         {
             var startTask = hotkeys.StartAsync();
-            _ = startTask.ContinueWith(
-                t => LogHotkeyHookFailedAsync(log!, t.Exception),
-                TaskContinuationOptions.OnlyOnFaulted);
+            _ = startTask.ContinueWith(t =>
+            {
+                LogHotkeyHookFailedAsync(log!, t.Exception);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Dispatcher.UIThread.Post(() => tray?.SetAccessibilityDenied(true));
+                    Dispatcher.UIThread.Post(() => _ = dialogs!.ShowErrorAsync(
+                        "Accessibility permission required",
+                        "Orbital needs Accessibility access to listen for your hotkeys. Open System Settings → Privacy & Security → Accessibility, toggle Orbital on, then quit and relaunch the app."));
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception ex)
         {
@@ -107,6 +119,7 @@ public partial class App : Application, IDisposable
             desktop.Shutdown();
         };
         tray.OpenDataFolderRequested += OpenDataFolder;
+        tray.AboutRequested += ShowAbout;
         tray.Show();
 
         overlay!.SettingsRequested += ShowSettings;
@@ -134,8 +147,11 @@ public partial class App : Application, IDisposable
             }
             catch (Exception ex)
             {
-                // async-void event handler: surface to log, never crash the app.
+                // async-void event handler: surface to log + dialog, never crash the app.
                 LogSaveSettingsFailed(log!, ex);
+                await dialogs!.ShowErrorAsync(
+                    "Couldn't save settings",
+                    "Something went wrong writing settings.json. Your changes were not saved. See the log file for details.");
             }
             finally
             {
@@ -143,6 +159,16 @@ public partial class App : Application, IDisposable
             }
         };
         w.CancelRequested += () => w.Close();
+        w.Show();
+    }
+
+    private void ShowAbout()
+    {
+        var version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "dev";
+        var vm = new AboutViewModel(version);
+        var w = new AboutWindow { DataContext = vm };
+        // Update-check hookup is Task D2+ — for now, a stub:
+        w.CheckUpdatesRequested = () => false;
         w.Show();
     }
 

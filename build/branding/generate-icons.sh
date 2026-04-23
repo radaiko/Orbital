@@ -48,9 +48,10 @@ magick -background none \
     "$SCRIPT_DIR/icon-256.png" \
     "$SCRIPT_DIR/AppIcon.ico"
 
-# 5. Tray icon (32×32)
+# 5. Tray icon — rendered from tray-icon.svg, which has bolder geometry
+# that survives 32×32 rasterization. icon.svg's strokes disappear at tray size.
 mkdir -p "$ROOT/src/Orbital.App/Assets"
-cp "$SCRIPT_DIR/icon-32.png" "$ROOT/src/Orbital.App/Assets/tray-icon.png"
+rsvg-convert -w 32 -h 32 "$SCRIPT_DIR/tray-icon.svg" -o "$ROOT/src/Orbital.App/Assets/tray-icon.png"
 
 # 6. Only keep the sizes we care about long-term in branding/
 KEEP=(128 256 512 1024)

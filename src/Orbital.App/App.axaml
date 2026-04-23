@@ -6,6 +6,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Orbital.App/Styles.axaml"/>
     </Application.Styles>
     <Application.Resources>
         <ResourceDictionary>

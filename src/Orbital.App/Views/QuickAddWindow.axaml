@@ -1,41 +1,63 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Orbital.Core.ViewModels"
-        xmlns:converters="using:Avalonia.Data.Converters"
         x:Class="Orbital.App.Views.QuickAddWindow"
         x:DataType="vm:QuickAddViewModel"
-        Width="420" Height="72"
+        Width="440" Height="88"
         WindowDecorations="None"
         CanResize="False"
         Topmost="True"
         ShowInTaskbar="False"
         TransparencyLevelHint="AcrylicBlur"
         Background="{DynamicResource OrbitalOverlayBackgroundBrush}"
-        CornerRadius="8">
-    <Grid Margin="12,8" ColumnDefinitions="*,120,32" RowDefinitions="Auto,*,Auto">
-        <TextBox Name="TitleBox"
-                 Grid.Column="0" Grid.Row="1"
-                 PlaceholderText="What needs doing?"
-                 Text="{Binding Title, Mode=TwoWay}"
-                 BorderThickness="0" Background="Transparent"
-                 Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
-                 FontSize="16" Padding="4" />
-        <TextBox Name="DueBox"
-                 Grid.Column="1" Grid.Row="1"
-                 PlaceholderText="due (optional)"
-                 Text="{Binding DueInput, Mode=TwoWay}"
-                 BorderThickness="0" Background="Transparent"
-                 Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
-                 FontSize="14" Padding="4" />
-        <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
-                   Text="{Binding DueParsed.Date, StringFormat='→ {0:ddd, MMM d}'}"
-                   Foreground="{DynamicResource OrbitalOverlayDimBrush}"
-                   FontSize="11" Margin="4,0,0,0"
-                   IsVisible="{Binding DueParsed.Date, Converter={x:Static converters:ObjectConverters.IsNotNull}}" />
-        <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
-                   Text="{Binding DueParsed.ErrorMessage, StringFormat='⚠ {0}'}"
-                   Foreground="#FFE57373"
-                   FontSize="11" Margin="4,0,0,0"
-                   IsVisible="{Binding DueParsed.IsError}" />
-    </Grid>
+        CornerRadius="10">
+    <Border CornerRadius="10"
+            BorderBrush="{DynamicResource OrbitalOverlayBorderBrush}"
+            BorderThickness="1">
+        <Grid Margin="12,8" RowDefinitions="44,Auto" ColumnDefinitions="*,120">
+            <!-- Title input -->
+            <TextBox Name="TitleBox"
+                     Grid.Row="0" Grid.Column="0"
+                     PlaceholderText="What needs doing?"
+                     Text="{Binding Title, Mode=TwoWay}"
+                     FontSize="14"
+                     Margin="0,0,8,0"/>
+
+            <!-- Due input -->
+            <TextBox Name="DueBox"
+                     Grid.Row="0" Grid.Column="1"
+                     PlaceholderText="due…"
+                     Text="{Binding DueInput, Mode=TwoWay}"/>
+
+            <!-- Preview row (success: arrow + parsed date) -->
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2"
+                        Orientation="Horizontal" Spacing="6"
+                        Margin="4,4,0,0"
+                        IsVisible="{Binding DueParsed.Date, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Path Data="{StaticResource Icon.ArrowRight}"
+                      Stretch="Uniform" Width="12" Height="12"
+                      Stroke="{DynamicResource OrbitalTextMutedBrush}"
+                      StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"
+                      VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding DueParsed.Date, StringFormat='{}{0:ddd, MMM d}'}"
+                           Foreground="{DynamicResource OrbitalTextMutedBrush}"
+                           FontSize="11"/>
+            </StackPanel>
+
+            <!-- Preview row (error) -->
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2"
+                        Orientation="Horizontal" Spacing="6"
+                        Margin="4,4,0,0"
+                        IsVisible="{Binding DueParsed.IsError}">
+                <Path Data="{StaticResource Icon.AlertTriangle}"
+                      Stretch="Uniform" Width="12" Height="12"
+                      Stroke="{DynamicResource OrbitalWarningBrush}"
+                      StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"
+                      VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding DueParsed.ErrorMessage}"
+                           Foreground="{DynamicResource OrbitalWarningBrush}"
+                           FontSize="11"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>

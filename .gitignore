@@ -1,0 +1,27 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Pp]ublish/
+
+# Rider / VS / VS Code
+.idea/
+.vs/
+*.user
+*.suo
+*.DotSettings.user
+.vscode/
+launchSettings.json
+
+# NuGet
+*.nupkg
+.nuget/
+
+# macOS
+.DS_Store
+
+# Orbital data (never commit user data)
+**/todos.json
+**/todos.json.tmp
+**/todos.backup.json
+**/settings.json

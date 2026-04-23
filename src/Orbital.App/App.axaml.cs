@@ -3,6 +3,7 @@ namespace Orbital.App;
 
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -12,6 +13,9 @@ using Orbital.Core.Persistence;
 public partial class App : Application, IDisposable
 {
     private TrayIconController? tray;
+    private AppHost? host;
+
+    public AppHost? Host => host;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -20,19 +24,28 @@ public partial class App : Application, IDisposable
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
-
-            tray = new TrayIconController();
-            tray.QuitRequested += () =>
-            {
-                tray?.Dispose();
-                desktop.Shutdown();
-            };
-            tray.OpenDataFolderRequested += OpenDataFolder;
-            tray.Show();
-
             AppPaths.EnsureDataDirectoryExists();
+
+            // Kick off async initialization without making the override async void.
+            _ = InitializeAsync(desktop);
         }
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private async Task InitializeAsync(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        host = new AppHost();
+        await host.LoadAsync();
+
+        tray = new TrayIconController();
+        tray.QuitRequested += async () =>
+        {
+            await host.FlushAsync();
+            tray?.Dispose();
+            desktop.Shutdown();
+        };
+        tray.OpenDataFolderRequested += OpenDataFolder;
+        tray.Show();
     }
 
     private static void OpenDataFolder()
@@ -47,7 +60,7 @@ public partial class App : Application, IDisposable
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to open data folder: {ex}");
+            Debug.WriteLine($"Failed to open data folder: {ex}");
         }
     }
 

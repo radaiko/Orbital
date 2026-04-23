@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Orbital.Core\Orbital.Core.csproj" />
   </ItemGroup>
 </Project>

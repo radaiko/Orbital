@@ -220,7 +220,7 @@
         <div class="os-icon">🪟</div>
         <div class="os-name">Windows</div>
         <div class="os-detail">x64 · installer with auto-updates</div>
-        <a class="dl-btn unavailable" href="#" data-asset="win-Setup.exe">Download</a>
+        <a class="dl-btn unavailable" href="#" data-asset="Orbital-win-Setup.exe">Download</a>
       </div>
       <div class="dl-card" data-os="linux">
         <div class="os-icon">🐧</div>
@@ -299,8 +299,8 @@
         const url  = a.browser_download_url;
         const name = a.name || "";
         if (!url) return;
-        if (name.startsWith("Orbital-osx-arm64-") && name.endsWith(".zip")) byKey["Orbital-osx-arm64"] = url;
-        if (name.endsWith("win-Setup.exe"))                                 byKey["win-Setup.exe"]     = url;
+        if (name.startsWith("Orbital-osx-arm64-")  && name.endsWith(".zip")) byKey["Orbital-osx-arm64"] = url;
+        if (name === "Orbital-win-Setup.exe")                                 byKey["Orbital-win-Setup.exe"] = url;
       });
 
       // Card buttons
@@ -315,7 +315,7 @@
       });
 
       // Primary CTA → OS's download (if available)
-      const ctaKey = isMac ? "Orbital-osx-arm64" : isWin ? "win-Setup.exe" : null;
+      const ctaKey = isMac ? "Orbital-osx-arm64" : isWin ? "Orbital-win-Setup.exe" : null;
       if (ctaKey && byKey[ctaKey]) cta.href = byKey[ctaKey];
     })
     .catch(() => {

@@ -119,13 +119,21 @@ mkdir -p "$VPK_OUT"
 INSTALL_IDENTITY="Developer ID Installer: Aiko Radlingmayr ($APPLE_TEAM_ID)"
 NOTARY_PROFILE="orbital-notary"
 
+# packId drives Velopack filenames (Orbital-win-Setup.exe, Orbital-osx-Setup.pkg).
+# bundleId is the separate Apple CFBundleIdentifier and stays reverse-DNS.
+PACK_ID="Orbital"
+BUNDLE_ID="dev.orbital.app"
+PACK_TITLE="Orbital"
+
 # macOS (one entry per RID). vpk runs natively on the host OS so we omit the
 # OS directive here. Signing + notarization on the .pkg so the updater install
 # is smooth.
 for RID in $MAC_RIDS; do
     echo "  ▸ vpk pack $RID"
     vpk pack \
-        --packId dev.orbital.app \
+        --packId "$PACK_ID" \
+        --packTitle "$PACK_TITLE" \
+        --bundleId "$BUNDLE_ID" \
         --packVersion "$VERSION" \
         --packDir "$PUBLISH/$RID/payload" \
         --mainExe Orbital.App \
@@ -139,7 +147,8 @@ done
 # cross-compilation. Unsigned; SmartScreen will prompt on first install.
 echo "  ▸ vpk [win] pack win-x64"
 vpk '[win]' pack \
-    --packId dev.orbital.app \
+    --packId "$PACK_ID" \
+    --packTitle "$PACK_TITLE" \
     --packVersion "$VERSION" \
     --packDir "$PUBLISH/win-x64/payload" \
     --mainExe Orbital.App.exe \

@@ -44,7 +44,7 @@ public sealed class QuickAddController
         vm = new QuickAddViewModel(parser);
         var w = new QuickAddWindow { DataContext = vm };
         w.SubmitRequested += OnSubmit;
-        w.CancelRequested += () => Dispatcher.UIThread.Post(() => w.Hide());
+        w.CancelRequested += () => w.Hide();
         return w;
     }
 
@@ -63,9 +63,13 @@ public sealed class QuickAddController
     {
         var screen = w.Screens.ScreenFromWindow(w) ?? w.Screens.Primary;
         if (screen is null) return;
+        // WorkingArea and Position are in physical pixels; Width/Height are DIPs.
+        // Multiply by scaling so HiDPI / Retina displays center correctly.
         var r = screen.WorkingArea;
+        var scale = screen.Scaling;
+        var physicalW = (int)(w.Width * scale);
         w.Position = new Avalonia.PixelPoint(
-            r.X + (r.Width - (int)w.Width) / 2,
+            r.X + (r.Width - physicalW) / 2,
             r.Y + r.Height / 3);
     }
 }

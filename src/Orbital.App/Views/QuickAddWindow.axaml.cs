@@ -7,7 +7,7 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Orbital.Core.ViewModels;
 
-public partial class QuickAddWindow : Window
+public sealed partial class QuickAddWindow : Window
 {
     public event Action? SubmitRequested;
     public event Action? CancelRequested;

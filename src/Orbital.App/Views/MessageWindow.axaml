@@ -5,13 +5,23 @@
         Title="Orbital"
         Width="440" Height="200"
         CanResize="False"
-        WindowStartupLocation="CenterScreen">
-    <StackPanel Margin="24" Spacing="12">
-        <TextBlock Name="TitleText" FontSize="16" FontWeight="SemiBold" />
-        <TextBlock Name="MessageText" TextWrapping="Wrap" />
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button Name="CancelButton" Content="Cancel" IsVisible="False" />
-            <Button Name="ConfirmButton" Content="OK" IsDefault="True" />
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource OrbitalOverlayBackgroundBrush}"
+        CornerRadius="10">
+    <StackPanel Margin="28" Spacing="12">
+        <TextBlock Name="TitleText"
+                   FontSize="16" FontWeight="SemiBold"
+                   Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"/>
+        <TextBlock Name="MessageText"
+                   FontSize="13"
+                   Foreground="{DynamicResource OrbitalOverlayDimBrush}"
+                   TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,8,0,0">
+            <Button Name="CancelButton" Content="Cancel" Classes="ghost" IsVisible="False"/>
+            <Button Name="ConfirmButton" Content="OK" Classes="primary" IsDefault="True"/>
         </StackPanel>
     </StackPanel>
 </Window>

@@ -30,6 +30,9 @@ public partial class App : Application, IDisposable
     private FileLoggerProvider? fileProvider;
     private ILogger<App>? log;
     private DialogService? dialogs;
+#pragma warning disable CA1859 // interface field is intentional — allows future test injection
+    private IUpdateService? updates;
+#pragma warning restore CA1859
 
     public AppHost? Host => host;
 
@@ -55,6 +58,11 @@ public partial class App : Application, IDisposable
         var version = typeof(App).Assembly.GetName().Version?.ToString(3);
         LogStarting(log, version);
         dialogs = new DialogService();
+
+        updates = new VelopackUpdateService(loggerFactory!.CreateLogger<VelopackUpdateService>());
+        updates.UpdateAvailable += OnUpdateAvailable;
+        updates.UpToDate += OnUpToDate;
+        updates.UpdateFailed += OnUpdateFailed;
 
         autoStart = AutoStartServiceFactory.Create(loggerFactory);
 
@@ -114,6 +122,7 @@ public partial class App : Application, IDisposable
         {
             await host!.FlushAsync();
             if (hotkeys is not null) await hotkeys.DisposeAsync();
+            updates?.Dispose();
             host.Dispose();
             tray?.Dispose();
             desktop.Shutdown();
@@ -121,6 +130,12 @@ public partial class App : Application, IDisposable
         tray.OpenDataFolderRequested += OpenDataFolder;
         tray.AboutRequested += ShowAbout;
         tray.Show();
+
+        // Wire update service to tray menu interactions.
+        tray.CheckForUpdatesRequested += async () => await updates!.CheckAsync();
+        tray.UpdateNowRequested += async () => await updates!.ApplyAndRestartAsync();
+        if (updates.IsSupported)
+            tray.SetUpdateState(TrayIconController.UpdateMenuState.Idle);
 
         overlay!.SettingsRequested += ShowSettings;
     }
@@ -167,8 +182,14 @@ public partial class App : Application, IDisposable
         var version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "dev";
         var vm = new AboutViewModel(version);
         var w = new AboutWindow { DataContext = vm };
-        // Update-check hookup is Task D2+ — for now, a stub:
-        w.CheckUpdatesRequested = () => false;
+        // Trigger a real check; the sync Func<bool> return is indicative —
+        // the user sees the actual result reflected in the tray menu shortly after.
+        w.CheckUpdatesRequested = () =>
+        {
+            if (updates is null || !updates.IsSupported) return false;
+            _ = updates.CheckAsync();
+            return updates.IsUpdateAvailable;
+        };
         w.Show();
     }
 
@@ -201,11 +222,43 @@ public partial class App : Application, IDisposable
                 if (log is not null) LogHotkeyDisposalFailed(log, ex);
             }
         }
+        updates?.Dispose();
         host?.Dispose();
         // LoggerFactory owns the FileLoggerProvider (via AddProvider) and
         // disposes it on its own Dispose. Do not double-dispose.
         loggerFactory?.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private void OnUpdateAvailable()
+    {
+        Dispatcher.UIThread.Post(() =>
+            tray?.SetUpdateState(TrayIconController.UpdateMenuState.Available, updates?.AvailableVersion));
+    }
+
+    private void OnUpToDate()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            tray?.SetUpdateState(TrayIconController.UpdateMenuState.UpToDate);
+            // Revert to Idle after 3 s so the user can manually check again.
+            var timer = new System.Timers.Timer(3000) { AutoReset = false };
+            timer.Elapsed += (_, _) =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                    tray?.SetUpdateState(TrayIconController.UpdateMenuState.Idle));
+                timer.Dispose();
+            };
+            timer.Start();
+        });
+    }
+
+    private async void OnUpdateFailed(Exception ex)
+    {
+        LogUpdateFailed(log!, ex);
+        await (dialogs?.ShowErrorAsync(
+            "Update failed",
+            $"Could not update Orbital: {ex.Message}\n\nSee the log file for details.") ?? Task.CompletedTask);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Orbital starting — version {Version}")]
@@ -225,4 +278,7 @@ public partial class App : Application, IDisposable
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Hotkey disposal failed")]
     private static partial void LogHotkeyDisposalFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Update failed")]
+    private static partial void LogUpdateFailed(ILogger logger, Exception ex);
 }

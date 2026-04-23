@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Orbital.Core.ViewModels;
 
@@ -37,9 +38,27 @@ public sealed partial class OverlayWindow : Window
         // If the pointer is released off the window (e.g. user alt-tabs mid-drag),
         // reset the drag state so the next press doesn't resurrect a stale from-index.
         list.AddHandler(PointerCaptureLostEvent, (_, _) => ResetDragState(), RoutingStrategies.Bubble);
-        // Avalonia 12 does not expose ItemContainerGenerator.IndexChanged; use LayoutUpdated
-        // (fires after each layout pass) to keep chip variant classes in sync.
-        list.LayoutUpdated += (_, _) => RefreshChipClasses();
+
+        // Chip variant classes only need refreshing after the VM signals a
+        // mutation (snooze, toggle-complete, due-edit) or when the row set
+        // changes. Running unconditionally on LayoutUpdated would re-traverse
+        // the tree on every layout pass including 60fps drag-reorder.
+        DataContextChanged += (_, _) =>
+        {
+            if (DataContext is OverlayViewModel vm)
+            {
+                vm.TodosMutated -= OnTodosChangedForChips;
+                vm.TodosMutated += OnTodosChangedForChips;
+            }
+            // Initial paint after the first layout pass populates the VMs.
+            Dispatcher.UIThread.Post(RefreshChipClasses, DispatcherPriority.Background);
+        };
+    }
+
+    private void OnTodosChangedForChips()
+    {
+        // Wait one frame so freshly-inserted Border containers exist in the tree.
+        Dispatcher.UIThread.Post(RefreshChipClasses, DispatcherPriority.Background);
     }
 
     private void ResetDragState()

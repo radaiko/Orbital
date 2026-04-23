@@ -98,4 +98,24 @@ public sealed class DueDateParserTests
         var r = parser.Parse(input);
         r.IsError.Should().BeTrue();
     }
+
+    [Fact]
+    public void Next_weekday_when_today_is_target_returns_one_week_not_two()
+    {
+        // Regression: when today IS the target weekday, "next <weekday>" must
+        // resolve to today + 7, not today + 14.
+        var monday = new DateOnly(2026, 4, 27);
+        var p = new DueDateParser(() => monday);
+        p.Parse("next mon").Date.Should().Be(monday.AddDays(7));
+    }
+
+    [Fact]
+    public void Short_date_leap_day_rolling_to_non_leap_year_returns_error()
+    {
+        // Regression: "29.2" on 2025-03-01 — Feb 29 2025 is invalid (non-leap),
+        // and the rollover target Feb 29 2026 is also invalid. Must not throw.
+        var afterLeap = new DateOnly(2025, 3, 1);
+        var p = new DueDateParser(() => afterLeap);
+        p.Parse("29.2").IsError.Should().BeTrue();
+    }
 }

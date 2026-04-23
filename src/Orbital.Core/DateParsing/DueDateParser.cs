@@ -63,7 +63,7 @@ public sealed class DueDateParser
             if (rest == "month")
                 return ParseResult.Ok(AddMonthsClamped(today(), 1));
             if (TryParseWeekday(rest, out var dow))
-                return ParseResult.Ok(NextWeekday(dow, skipIfToday: true).AddDays(7).AddDays(-0));
+                return ParseResult.Ok(NextWeekday(dow, skipIfToday: false).AddDays(7));
             return ParseResult.Error($"don't understand 'next {rest}'");
         }
 
@@ -80,8 +80,10 @@ public sealed class DueDateParser
             var t = today();
             if (TryBuildDate(t.Year, month, day, out var thisYear))
             {
-                if (thisYear < t) return ParseResult.Ok(new DateOnly(t.Year + 1, month, day));
-                return ParseResult.Ok(thisYear);
+                if (thisYear >= t) return ParseResult.Ok(thisYear);
+                if (TryBuildDate(t.Year + 1, month, day, out var nextYear))
+                    return ParseResult.Ok(nextYear);
+                return ParseResult.Error("invalid date");
             }
             return ParseResult.Error("invalid date");
         }

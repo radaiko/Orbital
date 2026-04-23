@@ -22,6 +22,7 @@ public sealed class JsonTodoStoreTests : IDisposable
 
     public void Dispose()
     {
+        store.Dispose();
         if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
     }
 

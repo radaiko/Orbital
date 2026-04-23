@@ -57,6 +57,19 @@ public partial class App : Application, IDisposable
         log = loggerFactory.CreateLogger<App>();
         var version = typeof(App).Assembly.GetName().Version?.ToString(3);
         LogStarting(log, version);
+
+        // Process-wide safety net: any managed exception we miss would otherwise
+        // abort the process with no hint. Log, don't crash.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            try { LogUnhandledAppDomain(log, e.ExceptionObject as Exception); } catch { }
+        };
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            try { LogUnobservedTask(log, e.Exception); } catch { }
+            e.SetObserved();
+        };
+
         dialogs = new DialogService();
 
         updates = new VelopackUpdateService(loggerFactory!.CreateLogger<VelopackUpdateService>());
@@ -89,20 +102,41 @@ public partial class App : Application, IDisposable
         hotkeys = new SharpHookGlobalHotkeyService(loggerFactory.CreateLogger<SharpHookGlobalHotkeyService>());
 
         // StartAsync runs the low-level hook on a background thread. On macOS
-        // the OS may deny Accessibility permission; handle both synchronous and
-        // asynchronous failures so an unobserved task doesn't crash the app.
+        // the OS may deny Accessibility permission; the continuation runs on
+        // a ThreadPool thread, so every piece of work is wrapped in try/catch
+        // to guarantee an Accessibility-denied path cannot kill the process.
         try
         {
             var startTask = hotkeys.StartAsync();
             _ = startTask.ContinueWith(t =>
             {
-                LogHotkeyHookFailedAsync(log!, t.Exception);
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                try
                 {
-                    Dispatcher.UIThread.Post(() => tray?.SetAccessibilityDenied(true));
-                    Dispatcher.UIThread.Post(() => _ = dialogs!.ShowErrorAsync(
-                        "Accessibility permission required",
-                        "Orbital needs Accessibility access to listen for your hotkeys. Open System Settings → Privacy & Security → Accessibility, toggle Orbital on, then quit and relaunch the app."));
+                    LogHotkeyHookFailedAsync(log!, t.Exception);
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return;
+
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try { tray?.SetAccessibilityDenied(true); }
+                        catch (Exception ex) { LogAccessibilityBannerFailed(log!, ex); }
+                    });
+                    Dispatcher.UIThread.Post(async void () =>
+                    {
+                        try
+                        {
+                            if (dialogs is null) return;
+                            await dialogs.ShowErrorAsync(
+                                "Accessibility permission required",
+                                "Orbital needs Accessibility access to listen for your hotkeys. Open System Settings → Privacy & Security → Accessibility, toggle Orbital on, then quit and relaunch the app.");
+                        }
+                        catch (Exception ex) { LogAccessibilityDialogFailed(log!, ex); }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // The fault continuation itself must never throw — any error
+                    // here would propagate as an unobserved task exception.
+                    try { LogHotkeyContinuationFailed(log!, ex); } catch { /* last-ditch */ }
                 }
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
@@ -282,4 +316,19 @@ public partial class App : Application, IDisposable
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Update failed")]
     private static partial void LogUpdateFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Accessibility banner update failed")]
+    private static partial void LogAccessibilityBannerFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Accessibility dialog failed")]
+    private static partial void LogAccessibilityDialogFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Hotkey continuation threw")]
+    private static partial void LogHotkeyContinuationFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Unobserved task exception")]
+    private static partial void LogUnobservedTask(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Critical, Message = "Unhandled app-domain exception")]
+    private static partial void LogUnhandledAppDomain(ILogger logger, Exception? ex);
 }

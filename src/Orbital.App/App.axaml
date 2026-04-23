@@ -12,6 +12,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://Orbital.App/Icons.axaml"/>
+                <ResourceInclude Source="avares://Orbital.App/CheckBoxTheme.axaml"/>
             </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">

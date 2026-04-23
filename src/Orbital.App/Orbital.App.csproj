@@ -28,6 +28,7 @@
     <AvaloniaResource Include="Assets\**" />
     <AvaloniaResource Include="Icons.axaml"/>
     <AvaloniaResource Include="Styles.axaml"/>
+    <AvaloniaResource Include="CheckBoxTheme.axaml"/>
   </ItemGroup>
 
   <ItemGroup>

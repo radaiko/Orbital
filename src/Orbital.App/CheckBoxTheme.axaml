@@ -1,0 +1,50 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ControlTheme x:Key="{x:Type CheckBox}" TargetType="CheckBox">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="8,0,0,0"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+                    <Border x:Name="CheckBorder"
+                            Grid.Column="0"
+                            Width="16" Height="16"
+                            CornerRadius="4"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource OrbitalOverlayDimBrush}"
+                            Background="{DynamicResource OrbitalSurface1Brush}">
+                        <Path x:Name="CheckMark"
+                              Data="{StaticResource Icon.Check}"
+                              Stretch="Uniform"
+                              Width="10" Height="10"
+                              Stroke="#FFFFFFFF"
+                              StrokeThickness="2.5"
+                              StrokeLineCap="Round"
+                              StrokeJoin="Round"
+                              Opacity="0"/>
+                    </Border>
+                    <ContentPresenter Grid.Column="1"
+                                      Content="{TemplateBinding Content}"
+                                      Padding="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"/>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^:checked /template/ Border#CheckBorder">
+            <Setter Property="Background" Value="{DynamicResource OrbitalAccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource OrbitalAccentBrush}"/>
+        </Style>
+        <Style Selector="^:checked /template/ Path#CheckMark">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <Style Selector="^:pointerover:unchecked /template/ Border#CheckBorder">
+            <Setter Property="BorderBrush" Value="{DynamicResource OrbitalOverlayForegroundBrush}"/>
+        </Style>
+    </ControlTheme>
+
+</ResourceDictionary>

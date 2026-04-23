@@ -18,7 +18,7 @@ public sealed class AppHost : IDisposable
     private Task? pendingSave;
 
     public ObservableCollection<Todo> Todos { get; } = new();
-    public AppSettings Settings { get; private set; } = new();
+    public AppSettings Settings { get; set; } = new();
 
     public event Action? SettingsChanged;
 

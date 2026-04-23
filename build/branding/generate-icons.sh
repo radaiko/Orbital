@@ -55,6 +55,10 @@ magick -background none \
 # that survives 32×32 rasterization. icon.svg's strokes disappear at tray size.
 mkdir -p "$ROOT/src/Orbital.App/Assets"
 rsvg-convert -w 32 -h 32 "$SCRIPT_DIR/tray-icon.svg" -o "$ROOT/src/Orbital.App/Assets/tray-icon.png"
+rsvg-convert -w 64 -h 64 "$SCRIPT_DIR/tray-icon.svg" -o "$ROOT/src/Orbital.App/Assets/tray-icon@2x.png"
+# 96x96 app icon for the About dialog — renders the full icon.svg at a size
+# where the orbit ring is visible.
+rsvg-convert -w 96 -h 96 "$SCRIPT_DIR/icon.svg" -o "$ROOT/src/Orbital.App/Assets/app-icon-96.png"
 
 # 6. Only keep the sizes we care about long-term in branding/
 KEEP=(128 256 512 1024)
@@ -69,4 +73,6 @@ for s in "${KEEP[@]}"; do
     echo "  $SCRIPT_DIR/icon-$s.png"
 done
 echo "  $ROOT/src/Orbital.App/Assets/tray-icon.png"
+echo "  $ROOT/src/Orbital.App/Assets/tray-icon@2x.png"
+echo "  $ROOT/src/Orbital.App/Assets/app-icon-96.png"
 echo "  $ROOT/docs/icon.svg"

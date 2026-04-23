@@ -2,6 +2,7 @@
 namespace Orbital.App.Views;
 
 using System;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
@@ -13,6 +14,13 @@ public sealed partial class AboutWindow : Window
     {
         InitializeComponent();
         this.FindControl<Button>("CheckUpdatesButton")!.Click += OnCheckUpdates;
+        this.FindControl<Button>("GitHubButton")!.Click += (_, _) => OpenUrl("https://github.com/radaiko/Orbital");
+    }
+
+    private static void OpenUrl(string url)
+    {
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch { /* best-effort */ }
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);

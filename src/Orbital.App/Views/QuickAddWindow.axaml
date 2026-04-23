@@ -10,7 +10,7 @@
         Topmost="True"
         ShowInTaskbar="False"
         TransparencyLevelHint="AcrylicBlur"
-        Background="#CC1E1E1E"
+        Background="{DynamicResource OrbitalOverlayBackgroundBrush}"
         CornerRadius="8">
     <Grid Margin="12,8" ColumnDefinitions="*,120,32" RowDefinitions="Auto,*,Auto">
         <TextBox Name="TitleBox"
@@ -18,16 +18,18 @@
                  PlaceholderText="What needs doing?"
                  Text="{Binding Title, Mode=TwoWay}"
                  BorderThickness="0" Background="Transparent"
+                 Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
                  FontSize="16" Padding="4" />
         <TextBox Name="DueBox"
                  Grid.Column="1" Grid.Row="1"
                  PlaceholderText="due (optional)"
                  Text="{Binding DueInput, Mode=TwoWay}"
                  BorderThickness="0" Background="Transparent"
+                 Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
                  FontSize="14" Padding="4" />
         <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
                    Text="{Binding DueParsed.Date, StringFormat='→ {0:ddd, MMM d}'}"
-                   Foreground="#B0FFFFFF"
+                   Foreground="{DynamicResource OrbitalOverlayDimBrush}"
                    FontSize="11" Margin="4,0,0,0"
                    IsVisible="{Binding DueParsed.Date, Converter={x:Static converters:ObjectConverters.IsNotNull}}" />
         <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"

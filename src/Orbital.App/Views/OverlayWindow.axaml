@@ -9,28 +9,28 @@
         Topmost="True"
         ShowInTaskbar="False"
         TransparencyLevelHint="AcrylicBlur"
-        Background="#CC1E1E1E"
+        Background="{DynamicResource OrbitalOverlayBackgroundBrush}"
         CornerRadius="10">
-    <Border CornerRadius="10" BorderBrush="#33FFFFFF" BorderThickness="1">
+    <Border CornerRadius="10" BorderBrush="{DynamicResource OrbitalOverlayBorderBrush}" BorderThickness="1">
         <DockPanel LastChildFill="True">
             <!-- Header -->
             <Grid DockPanel.Dock="Top" Height="36" ColumnDefinitions="*,Auto,Auto" Margin="12,6">
-                <TextBlock Grid.Column="0" Text="Orbital" Foreground="White"
+                <TextBlock Grid.Column="0" Text="Orbital" Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
                            FontWeight="SemiBold" VerticalAlignment="Center" />
                 <Button Name="SettingsButton" Grid.Column="1" Width="24" Height="24"
                         Background="Transparent" BorderThickness="0" Content="⚙︎"
-                        Foreground="#B0FFFFFF" />
+                        Foreground="{DynamicResource OrbitalOverlayDimBrush}" />
                 <Button Name="CloseButton" Grid.Column="2" Width="24" Height="24"
                         Background="Transparent" BorderThickness="0" Content="✕"
-                        Foreground="#B0FFFFFF" />
+                        Foreground="{DynamicResource OrbitalOverlayDimBrush}" />
             </Grid>
             <!-- Footer -->
             <Grid DockPanel.Dock="Bottom" Height="32" ColumnDefinitions="*,Auto" Margin="12,4">
-                <TextBlock Grid.Column="0" Foreground="#80FFFFFF" FontSize="11"
+                <TextBlock Grid.Column="0" Foreground="{DynamicResource OrbitalOverlayDimBrush}" FontSize="11"
                            VerticalAlignment="Center"
                            Text="{Binding Rows.Count, StringFormat='{}{0} items'}" />
                 <ToggleButton Grid.Column="1" Content="show ✓" Padding="6,2"
-                              Foreground="#B0FFFFFF" Background="Transparent" BorderThickness="0"
+                              Foreground="{DynamicResource OrbitalOverlayDimBrush}" Background="Transparent" BorderThickness="0"
                               FontSize="11"
                               IsChecked="{Binding ShowCompleted, Mode=TwoWay}" />
             </Grid>
@@ -50,7 +50,7 @@
 
                             <Grid Grid.Column="1">
                                 <TextBlock Text="{Binding Title}"
-                                           Foreground="White"
+                                           Foreground="{DynamicResource OrbitalOverlayForegroundBrush}"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"
                                            IsVisible="{Binding !IsEditingTitle}" />
@@ -62,11 +62,11 @@
 
                             <Grid Grid.Column="2">
                                 <Border Padding="6,2" CornerRadius="4"
-                                        Background="#22FFFFFF"
+                                        Background="{DynamicResource OrbitalOverlayChipBackgroundBrush}"
                                         VerticalAlignment="Center"
                                         IsVisible="{Binding !IsEditingDue}">
                                     <TextBlock Text="{Binding DueLabel}"
-                                               FontSize="11" Foreground="#D0FFFFFF" />
+                                               FontSize="11" Foreground="{DynamicResource OrbitalOverlayDimBrush}" />
                                 </Border>
                                 <TextBox Text="{Binding DueEditBuffer, Mode=TwoWay}"
                                          Width="90" BorderThickness="0" Background="#22000000"

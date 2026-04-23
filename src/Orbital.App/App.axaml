@@ -7,4 +7,24 @@
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="OrbitalOverlayBackgroundBrush" Color="#CC1E1E1E"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayBorderBrush" Color="#33FFFFFF"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayForegroundBrush" Color="#FFFFFFFF"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayDimBrush" Color="#80FFFFFF"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayChipBackgroundBrush" Color="#22FFFFFF"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="OrbitalOverlayBackgroundBrush" Color="#F2FAFAFA"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayBorderBrush" Color="#33000000"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayForegroundBrush" Color="#FF1E1E1E"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayDimBrush" Color="#801E1E1E"/>
+                    <SolidColorBrush x:Key="OrbitalOverlayChipBackgroundBrush" Color="#221E1E1E"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

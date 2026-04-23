@@ -135,3 +135,44 @@ vpk pack \
 
 echo "▸ Velopack packages:"
 find "$VPK_OUT" -type f \( -name '*.nupkg' -o -name '*Setup*' -o -name 'RELEASES*' -o -name '*.zip' \)
+
+# --- GitHub release ---
+echo "▸ Composing release notes"
+NOTES_FILE="$(mktemp)"
+trap 'rm -f "$NOTES_FILE"' EXIT
+
+PREV_TAG="$(git -C "$ROOT" describe --tags --abbrev=0 2>/dev/null || true)"
+{
+    echo "## Orbital $VERSION"
+    echo
+    if [ -n "$PREV_TAG" ]; then
+        echo "Changes since $PREV_TAG:"
+        echo
+        git -C "$ROOT" log --pretty=format:'- %s' "$PREV_TAG..HEAD"
+    else
+        echo "Initial public release."
+    fi
+    echo
+} > "$NOTES_FILE"
+
+echo "▸ Creating GitHub release $TAG"
+gh release create "$TAG" \
+    --title "Orbital $VERSION" \
+    --notes-file "$NOTES_FILE"
+
+echo "▸ Uploading artifacts"
+for f in "${MAC_ARTIFACTS[@]}"; do
+    gh release upload "$TAG" "$f"
+done
+gh release upload "$TAG" "$WIN_ZIP"
+
+# All Velopack artifacts (nupkg, RELEASES, Setup, Portable.zip)
+find "$VPK_OUT" -maxdepth 2 -type f \( -name '*.nupkg' -o -name '*Setup*' -o -name 'RELEASES*' -o -name '*Portable.zip' \) \
+    -exec gh release upload "$TAG" {} \;
+
+echo "▸ Pushing tag"
+git -C "$ROOT" tag "$TAG" 2>/dev/null || true
+git -C "$ROOT" push origin "$TAG"
+
+URL="$(gh release view "$TAG" --json url -q .url)"
+echo "✓ Release complete: $URL"

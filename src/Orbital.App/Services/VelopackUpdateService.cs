@@ -13,7 +13,10 @@ public sealed partial class VelopackUpdateService : IUpdateService
     private readonly ILogger<VelopackUpdateService> log;
     private readonly UpdateManager? manager;
     private readonly Timer? periodic;
-    private UpdateInfo? pending;
+    // volatile: written on the timer's ThreadPool callback, read on the UI
+    // thread via IsUpdateAvailable / AvailableVersion. On ARM (Apple Silicon)
+    // the weak memory model requires a barrier for safe cross-thread visibility.
+    private volatile UpdateInfo? pending;
 
     public bool IsSupported { get; }
     public bool IsUpdateAvailable => pending is not null;

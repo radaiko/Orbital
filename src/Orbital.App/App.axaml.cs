@@ -123,6 +123,7 @@ public partial class App : Application, IDisposable
             await host!.FlushAsync();
             if (hotkeys is not null) await hotkeys.DisposeAsync();
             updates?.Dispose();
+            updates = null; // prevent App.Dispose() from re-disposing
             host.Dispose();
             tray?.Dispose();
             desktop.Shutdown();

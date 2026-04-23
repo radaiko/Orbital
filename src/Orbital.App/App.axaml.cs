@@ -14,6 +14,7 @@ public partial class App : Application, IDisposable
 {
     private TrayIconController? tray;
     private AppHost? host;
+    private SharpHookGlobalHotkeyService? hotkeys;
 
     public AppHost? Host => host;
 
@@ -37,10 +38,34 @@ public partial class App : Application, IDisposable
         host = new AppHost();
         await host.LoadAsync();
 
+        hotkeys = new SharpHookGlobalHotkeyService();
+
+        // StartAsync runs the low-level hook on a background thread.
+        // On macOS the OS may deny Accessibility permission; wrap to prevent crash.
+        try
+        {
+            _ = hotkeys.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to start global hotkey hook: {ex}");
+        }
+
+        hotkeys.Register(host.Settings.QuickAddHotkey, () =>
+        {
+            // Temporary: confirmed by Debug output; real window wired in Task 16.
+            Debug.WriteLine("Quick-add hotkey pressed");
+        });
+        hotkeys.Register(host.Settings.ToggleOverlayHotkey, () =>
+        {
+            Debug.WriteLine("Overlay hotkey pressed");
+        });
+
         tray = new TrayIconController();
         tray.QuitRequested += async () =>
         {
-            await host.FlushAsync();
+            await host!.FlushAsync();
+            if (hotkeys is not null) await hotkeys.DisposeAsync();
             tray?.Dispose();
             desktop.Shutdown();
         };

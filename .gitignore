@@ -25,3 +25,7 @@ launchSettings.json
 **/todos.json.tmp
 **/*.backup.json
 **/settings.json
+
+# Local environment / secrets
+.env
+.env.local

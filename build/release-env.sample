@@ -1,0 +1,13 @@
+# build/release-env.sample
+# Copy to .env (gitignored) and fill in.
+#
+# Apple signing & notarization (required for release.sh):
+export APPLE_ID=you@example.com
+export APPLE_TEAM_ID=ABCDE12345
+export APPLE_PASSWORD=xxxx-xxxx-xxxx-xxxx
+export CODESIGN_IDENTITY="Developer ID Application: Your Name (ABCDE12345)"
+
+# Optional: override target RIDs
+# export MAC_RIDS="osx-arm64 osx-x64"
+
+# GH_TOKEN is inferred from `gh auth status` — no manual var needed.

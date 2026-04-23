@@ -3,23 +3,25 @@ namespace Orbital.App.Services;
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using Avalonia;
+using Microsoft.Extensions.Logging;
 using Orbital.App.Views;
 using Orbital.Core.Models;
 using Orbital.Core.ViewModels;
 
-public sealed class OverlayController
+public sealed partial class OverlayController
 {
     private readonly AppHost host;
+    private readonly ILogger<OverlayController> log;
     private OverlayWindow? window;
     private OverlayViewModel? vm;
 
     public event Action? SettingsRequested;
 
-    public OverlayController(AppHost host)
+    public OverlayController(AppHost host, ILogger<OverlayController> log)
     {
         this.host = host;
+        this.log = log;
         host.SettingsChanged += ApplySettingsToLiveOverlay;
     }
 
@@ -74,7 +76,7 @@ public sealed class OverlayController
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Persist ShowCompleted failed: {ex}");
+            LogPersistShowCompletedFailed(log, ex);
         }
     }
 
@@ -106,4 +108,7 @@ public sealed class OverlayController
         };
         w.Position = new PixelPoint(x, y);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Persist ShowCompleted failed")]
+    private static partial void LogPersistShowCompletedFailed(ILogger logger, Exception ex);
 }

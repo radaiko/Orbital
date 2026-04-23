@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.Logging;
+using Orbital.App.Logging;
 using Orbital.App.Services;
 using Orbital.App.Views;
 using Orbital.Core.Persistence;
@@ -21,7 +23,10 @@ public partial class App : Application, IDisposable
     private OverlayController? overlay;
     private IDisposable? quickAddHotkeyReg;
     private IDisposable? overlayHotkeyReg;
-    private readonly IAutoStartService autoStart = AutoStartServiceFactory.Create();
+    private IAutoStartService? autoStart;
+    private ILoggerFactory? loggerFactory;
+    private FileLoggerProvider? fileProvider;
+    private ILogger<App>? log;
 
     public AppHost? Host => host;
 
@@ -42,6 +47,13 @@ public partial class App : Application, IDisposable
 
     private async Task InitializeAsync(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        (loggerFactory, fileProvider) = LoggingSetup.Create();
+        log = loggerFactory.CreateLogger<App>();
+        var version = typeof(App).Assembly.GetName().Version?.ToString(3);
+        LogStarting(log, version);
+
+        autoStart = AutoStartServiceFactory.Create(loggerFactory);
+
         host = new AppHost();
         await host.LoadAsync();
 
@@ -60,9 +72,9 @@ public partial class App : Application, IDisposable
         };
 
         quickAdd = new QuickAddController(host);
-        overlay = new OverlayController(host);
+        overlay = new OverlayController(host, loggerFactory.CreateLogger<OverlayController>());
 
-        hotkeys = new SharpHookGlobalHotkeyService();
+        hotkeys = new SharpHookGlobalHotkeyService(loggerFactory.CreateLogger<SharpHookGlobalHotkeyService>());
 
         // StartAsync runs the low-level hook on a background thread. On macOS
         // the OS may deny Accessibility permission; handle both synchronous and
@@ -71,12 +83,12 @@ public partial class App : Application, IDisposable
         {
             var startTask = hotkeys.StartAsync();
             _ = startTask.ContinueWith(
-                t => Debug.WriteLine($"Global hotkey hook failed: {t.Exception}"),
+                t => LogHotkeyHookFailedAsync(log!, t.Exception),
                 TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to start global hotkey hook: {ex}");
+            LogHotkeyHookFailed(log!, ex);
         }
 
         RegisterHotkeys();
@@ -123,7 +135,7 @@ public partial class App : Application, IDisposable
             catch (Exception ex)
             {
                 // async-void event handler: surface to log, never crash the app.
-                Debug.WriteLine($"Failed to save settings: {ex}");
+                LogSaveSettingsFailed(log!, ex);
             }
             finally
             {
@@ -134,7 +146,7 @@ public partial class App : Application, IDisposable
         w.Show();
     }
 
-    private static void OpenDataFolder()
+    private void OpenDataFolder()
     {
         try
         {
@@ -146,7 +158,7 @@ public partial class App : Application, IDisposable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to open data folder: {ex}");
+            if (log is not null) LogOpenDataFolderFailed(log, ex);
         }
     }
 
@@ -158,9 +170,32 @@ public partial class App : Application, IDisposable
         if (hotkeys is not null)
         {
             try { hotkeys.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
-            catch (Exception ex) { Debug.WriteLine($"Hotkey disposal failed: {ex}"); }
+            catch (Exception ex)
+            {
+                if (log is not null) LogHotkeyDisposalFailed(log, ex);
+            }
         }
         host?.Dispose();
+        loggerFactory?.Dispose();
+        fileProvider?.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Orbital starting — version {Version}")]
+    private static partial void LogStarting(ILogger logger, string? version);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to start global hotkey hook")]
+    private static partial void LogHotkeyHookFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Global hotkey hook failed asynchronously")]
+    private static partial void LogHotkeyHookFailedAsync(ILogger logger, Exception? ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save settings")]
+    private static partial void LogSaveSettingsFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to open data folder")]
+    private static partial void LogOpenDataFolderFailed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Hotkey disposal failed")]
+    private static partial void LogHotkeyDisposalFailed(ILogger logger, Exception ex);
 }

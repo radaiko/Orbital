@@ -5,8 +5,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security;
+using Microsoft.Extensions.Logging;
 
-public sealed class MacAutoStartService : IAutoStartService
+public sealed partial class MacAutoStartService : IAutoStartService
 {
     private static readonly string LaunchAgentsDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "LaunchAgents");
@@ -14,6 +15,12 @@ public sealed class MacAutoStartService : IAutoStartService
     private static readonly string PlistPath = Path.Combine(LaunchAgentsDir, Label + ".plist");
 
     private readonly string exePath = Environment.ProcessPath ?? "";
+    private readonly ILogger<MacAutoStartService>? log;
+
+    public MacAutoStartService(ILogger<MacAutoStartService>? log = null)
+    {
+        this.log = log;
+    }
 
     public bool IsEnabled => File.Exists(PlistPath);
 
@@ -47,7 +54,7 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
         File.Delete(PlistPath);
     }
 
-    private static void Run(string fileName, string args)
+    private void Run(string fileName, string args)
     {
         try
         {
@@ -56,7 +63,10 @@ $@"<?xml version=""1.0"" encoding=""UTF-8""?>
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AutoStart] launchctl failed: {ex.Message}");
+            if (log is not null) LogLaunchctlFailed(log, ex, args);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "launchctl invocation failed: {Args}")]
+    private static partial void LogLaunchctlFailed(ILogger logger, Exception ex, string args);
 }

@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Orbital.Core.Models;
+using Microsoft.Extensions.Logging;
 using SharpHook;
 using SharpHook.Native;
 
@@ -13,6 +14,12 @@ public sealed class SharpHookGlobalHotkeyService : IGlobalHotkeyService
 {
     private readonly TaskPoolGlobalHook hook = new();
     private readonly ConcurrentDictionary<Guid, Registration> registrations = new();
+    private readonly ILogger<SharpHookGlobalHotkeyService> log;
+
+    public SharpHookGlobalHotkeyService(ILogger<SharpHookGlobalHotkeyService> log)
+    {
+        this.log = log;
+    }
 
     private sealed record Registration(HotkeyBinding Binding, Action Callback);
 

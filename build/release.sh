@@ -103,3 +103,35 @@ rm -f "$WIN_ZIP"
 (cd "$WIN_OUT" && zip -r "$(basename "$WIN_ZIP")" payload > /dev/null)
 
 echo "▸ Windows artifact: $WIN_ZIP"
+
+# --- Velopack pack ---
+echo "▸ Packing Velopack update artifacts"
+VPK_OUT="$PUBLISH/velopack"
+rm -rf "$VPK_OUT"
+mkdir -p "$VPK_OUT"
+
+# macOS (one entry per RID)
+for RID in $MAC_RIDS; do
+    vpk_platform="osx"
+    echo "  ▸ vpk pack $RID"
+    vpk pack \
+        --packId dev.orbital.app \
+        --packVersion "$VERSION" \
+        --packDir "$PUBLISH/$RID/payload" \
+        --mainExe Orbital.App \
+        --outputDir "$VPK_OUT/$RID" \
+        --runtime "$vpk_platform-$(echo "$RID" | sed 's/osx-//')"
+done
+
+# Windows
+echo "  ▸ vpk pack win-x64"
+vpk pack \
+    --packId dev.orbital.app \
+    --packVersion "$VERSION" \
+    --packDir "$PUBLISH/win-x64/payload" \
+    --mainExe Orbital.App.exe \
+    --outputDir "$VPK_OUT/win-x64" \
+    --runtime win-x64
+
+echo "▸ Velopack packages:"
+find "$VPK_OUT" -type f \( -name '*.nupkg' -o -name '*Setup*' -o -name 'RELEASES*' -o -name '*.zip' \)
